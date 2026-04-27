@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Antrian Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Hide spinner for number input */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Container -->
+    <div
+        class="glass-panel shadow-2xl rounded-2xl w-full max-w-md overflow-hidden relative transition-all duration-300 hover:shadow-indigo-200/50">
+
+        <!-- Header -->
+        <div class="bg-indigo-600 p-6 text-center text-white relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-indigo-500 rounded-full opacity-50 blur-xl"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500 rounded-full opacity-50 blur-xl"></div>
+
+            <div class="flex justify-center mb-3 relative z-10">
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg p-1 overflow-hidden">
+                    <img src="logo.jpg" alt="Logo SMA 7" class="w-full h-full object-contain rounded-full">
+                </div>
+            </div>
+
+            <h2 class="text-sm font-semibold text-indigo-200 tracking-wider uppercase relative z-10">SMA NEGERI 7
+                MAKASSAR</h2>
+            <h1 class="text-2xl font-bold relative z-10 mt-1">Antrian Online</h1>
+            <p class="text-indigo-100 text-sm mt-1 relative z-10">Ambil nomor urut Anda dengan mudah</p>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 sm:p-8" id="main-content">
+            <!-- Loading State -->
+            <div id="loading-state" class="flex flex-col items-center justify-center py-8">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-4"></div>
+                <p class="text-gray-500 text-sm">Memeriksa jadwal...</p>
+            </div>
+
+            <!-- Closed Message (Hidden by default) -->
+            <div id="closed-message" class="hidden text-center py-8">
+                <div
+                    class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Pendaftaran Ditutup</h2>
+                <p class="text-gray-600 text-sm">Pendaftaran Antrian Ditutup.<br>Buka Kembali Senin - Jumat, Jam 08:00 WITA.</p>
+            </div>
+
+            <!-- Full Message (Hidden by default) -->
+            <div id="full-message" class="hidden text-center py-8">
+                <div
+                    class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Kuota Penuh</h2>
+                <p class="text-gray-600 text-sm">Mohon maaf, kuota antrian hari ini sudah penuh.<br>Silakan coba lagi
+                    besok.</p>
+            </div>
+
+            <!-- Form (Hidden by default until validated) -->
+            <form id="queue-form" class="hidden space-y-5">
+                <div>
+                    <label for="namaOrtu" class="block text-sm font-medium text-gray-700 mb-1">Nama Orang
+                        Tua/Wali (YANG SATU KK)</label>
+                    <input type="text" id="namaOrtu" required placeholder="Masukkan nama lengkap"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label for="namaMurid" class="block text-sm font-medium text-gray-700 mb-1">Nama Calon Murid
+                        Baru</label>
+                    <input type="text" id="namaMurid" required placeholder="Masukkan nama murid"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label for="noTelp" class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp
+                        Aktif</label>
+                    <input type="tel" id="noTelp" required placeholder="Contoh: 081234567890" pattern="[0-9]*"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                </div>
+
+                <button type="submit" id="submit-btn"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 flex justify-center items-center">
+                    <span id="btn-text">Ambil Antrian</span>
+                    <div id="btn-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-white ml-2">
+                    </div>
+                </button>
+            </form>
+
+            <!-- Success Output (Hidden by default) -->
+            <div id="success-output" class="hidden text-center py-4">
+                <p class="text-sm text-gray-500 font-medium mb-1">Nomor Antrian Anda</p>
+                <div class="text-6xl font-black text-indigo-600 mb-4 tracking-tighter" id="display-number">--</div>
+
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
+                    <p class="text-sm text-blue-800" id="display-nama-murid">Calon Murid: -</p>
+                    <p class="text-xs text-blue-600 mt-1" id="display-waktu">Waktu Daftar: -</p>
+                </div>
+
+                <div class="bg-gray-100 rounded-lg p-3 inline-block">
+                    <p class="text-xs text-gray-600 italic">"Silakan di SCREENSHOT dan tunjukkan nomor ini kepada
+                        petugas saat tiba di
+                        sekolah"</p>
+                </div>
+
+                <button type="button" id="new-queue-btn"
+                    class="mt-6 text-sm text-indigo-600 hover:text-indigo-800 font-medium underline">Kembali</button>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 border-t border-gray-100 p-4 text-center">
+            <p class="text-xs text-gray-400">&copy; <span id="current-year"></span> Sistem Antrian SMANET MACCA.
+            </p>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+
+</html>

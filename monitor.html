@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Antrian - SMA Negeri 7 Makassar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white h-screen w-screen overflow-hidden flex flex-col">
+
+    <!-- Audio Unlock Overlay -->
+    <div id="audio-unlock-overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex flex-col items-center justify-center cursor-pointer transition-opacity duration-300">
+        <div class="bg-blue-600 text-white rounded-full p-6 shadow-[0_0_30px_rgba(37,99,235,0.5)] mb-6 animate-bounce">
+            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+        </div>
+        <h2 class="text-4xl font-bold text-white tracking-wide mb-3">Aktifkan Monitor</h2>
+        <p class="text-xl text-slate-300 font-medium">Klik di mana saja untuk mengaktifkan sistem suara</p>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 px-8 py-6 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-4">
+            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg p-1 overflow-hidden">
+                <img src="logo.jpg" alt="Logo SMA 7" class="w-full h-full object-contain rounded-full">
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold tracking-wide">ANTRIAN ONLINE</h1>
+                <p class="text-lg text-blue-400 font-semibold uppercase tracking-widest">SMA Negeri 7 Makassar</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <div id="clock-time" class="text-5xl font-bold tracking-tight">00:00:00</div>
+            <div id="clock-date" class="text-lg text-slate-400 mt-1">Tanggal, Bulan Tahun</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex p-6 gap-6">
+        
+        <!-- Current Serving (Left Side) -->
+        <div class="w-2/3 flex flex-col gap-4">
+            <!-- Main Call Display -->
+            <div class="glass-panel rounded-3xl flex-1 flex flex-col items-center justify-center p-6 shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-32 -left-32 w-96 h-96 bg-orange-500 rounded-full opacity-20 blur-3xl"></div>
+                <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-500 rounded-full opacity-20 blur-3xl"></div>
+                
+                <h2 class="text-xl md:text-2xl font-semibold text-slate-300 uppercase tracking-widest mb-1 relative z-10">Panggilan Antrian</h2>
+                
+                <div id="current-serving-number" class="text-[7rem] md:text-[8rem] leading-none font-black text-white drop-shadow-[0_0_25px_rgba(251,146,60,0.5)] relative z-10 mb-2 transition-all duration-500 scale-100">---</div>
+                
+                <div id="current-serving-computer" class="text-2xl md:text-3xl font-bold text-yellow-400 tracking-wider relative z-10 mb-2 drop-shadow-md opacity-0 transition-opacity duration-500">Ke Komputer -</div>
+                
+                <div id="current-serving-name" class="text-lg md:text-xl text-orange-400 font-medium relative z-10 text-center">-</div>
+            </div>
+
+            <!-- 7 Counters Status Grid -->
+            <div class="grid grid-cols-4 gap-3 shrink-0" id="counters-container">
+                <!-- Counters injected here -->
+            </div>
+        </div>
+
+        <!-- Right Sidebar (Waiting List) -->
+        <div class="w-1/3 flex flex-col gap-6">
+            
+            <div class="glass-panel rounded-3xl p-6 flex-1 flex flex-col">
+                <h3 class="text-xl font-semibold text-slate-300 uppercase tracking-wider mb-4 border-b border-slate-700 pb-3 flex justify-between">
+                    <span>Selanjutnya</span>
+                    <span class="text-yellow-500 text-sm bg-yellow-500/10 px-3 py-1 rounded-full" id="waiting-count">0 Menunggu</span>
+                </h3>
+                
+                <div id="waiting-list" class="flex-1 overflow-hidden flex flex-col gap-4">
+                    <!-- Waiting items injected here -->
+                    <div class="text-center text-slate-500 py-10">Belum ada antrian.</div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800/50 py-3 text-center border-t border-slate-700/50 text-slate-500 text-sm">
+        Sistem Antrian &copy; <span id="current-year"></span> SMA Negeri 7 Makassar
+    </footer>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/monitor.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
