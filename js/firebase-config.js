@@ -6,28 +6,44 @@
 // Untuk penggunaan di sisi klien (Web), Anda membutuhkan konfigurasi lengkap seperti di bawah ini.
 
 const firebaseConfig = {
-    apiKey: "GANTI_DENGAN_API_KEY_ANDA",
-    authDomain: "GANTI_DENGAN_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://GANTI_DENGAN_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "GANTI_DENGAN_PROJECT_ID",
-    storageBucket: "GANTI_DENGAN_PROJECT_ID.appspot.com",
-    messagingSenderId: "GANTI_DENGAN_SENDER_ID",
-    appId: "GANTI_DENGAN_APP_ID"
+    apiKey: "AIzaSyA0J2mX647pGA0O9t8kh6IGUs8sIlnBrhI",
+    authDomain: "antrian-smanet-a5395.firebaseapp.com",
+    databaseURL: "https://antrian-smanet-default-rtdb.firebaseio.com",
+    projectId: "antrian-smanet",
+    storageBucket: "antrian-smanet.firebasestorage.app",
+    messagingSenderId: "226914431198",
+    appId: "1:226914431198:web:76c68225e78ef57d35124f"
 };
+
+// Fallback Mock LocalStorage jika Firebase gagal terhubung
+let useMock = false;
 
 // Coba inisialisasi Firebase
 let database;
 try {
     // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    database = firebase.database();
-    console.log("Firebase berhasil diinisialisasi.");
+    if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        console.log("Firebase berhasil diinisialisasi.");
+        
+        // Test connection
+        database.ref('.info/connected').on('value', (snap) => {
+            if (snap.val() === true) {
+                console.log("Terhubung ke Firebase Realtime Database.");
+                useMock = false;
+            } else {
+                console.warn("Terputus dari Firebase. Menunggu koneksi...");
+                // Note: We don't necessarily switch to mock here because Firebase handles reconnections
+            }
+        });
+    } else {
+        throw new Error("Firebase SDK tidak ditemukan");
+    }
 } catch (error) {
-    console.warn("Firebase belum dikonfigurasi dengan benar. Mode mock (lokal) akan digunakan untuk keperluan preview.");
+    console.warn("Firebase tidak dapat diinisialisasi, menggunakan mode MOCK (Lokal):", error.message);
+    useMock = true;
 }
-
-// Fallback Mock LocalStorage jika Firebase belum dikonfigurasi (HANYA UNTUK PREVIEW)
-const useMock = !database || firebaseConfig.apiKey.includes("GANTI_DENGAN");
 
 // Fungsi pembantu untuk Mocking jika diperlukan
 const mockDB = {
