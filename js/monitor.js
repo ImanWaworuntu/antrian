@@ -81,8 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const countersContainerEl = document.getElementById('counters-container');
 
     // State for animations and latest call
-    let prevServingNumber = null;
-    let prevServingQueues = [];
+    let prevCallId = null;
+    let prevCallTimestamp = null;
     let latestCalledQueue = null;
     let isInitialLoad = true;
     
@@ -166,17 +166,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Determine Latest Called Queue for Main Display
-        const newCalls = serving.filter(q => !prevServingQueues.some(pq => pq.id === q.id));
-        if (newCalls.length > 0) {
-            newCalls.sort((a, b) => b.noUrut - a.noUrut);
-            latestCalledQueue = newCalls[0];
-        } else if (serving.length === 0) {
+        // Determine Latest Called Queue for Main Display (Based on latest timestamp)
+        if (serving.length > 0) {
+            // Sort by lastCalledAt (descending) to find the most recently called
+            const sortedByCallTime = [...serving].sort((a, b) => {
+                const timeA = a.lastCalledAt || 0;
+                const timeB = b.lastCalledAt || 0;
+                if (timeA !== timeB) return timeB - timeA;
+                return b.noUrut - a.noUrut; // Fallback to queue number
+            });
+            latestCalledQueue = sortedByCallTime[0];
+        } else {
             latestCalledQueue = null;
-        } else if (latestCalledQueue && !serving.some(q => q.id === latestCalledQueue.id)) {
-            // Latest called queue is no longer serving, fallback to highest serving
-            const sortedServing = [...serving].sort((a, b) => b.noUrut - a.noUrut);
-            latestCalledQueue = sortedServing[0];
         }
 
         prevServingQueues = [...serving];
@@ -188,8 +189,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const counterInfo = countersData.find(c => c.id === adminId);
             const computerName = counterInfo ? counterInfo.name : 'Komputer -';
             
-            // Animation trigger if changed
-            if (prevServingNumber !== numStr) {
+            const callId = latestCalledQueue.id;
+            const callTimestamp = latestCalledQueue.lastCalledAt || 0;
+            
+            // Animation & Voice trigger if this is a NEW call (new ID or new timestamp for same ID)
+            if (prevCallId !== callId || prevCallTimestamp !== callTimestamp) {
                 currentNumberEl.classList.add('scale-110', 'text-orange-400');
                 if(currentComputerEl) currentComputerEl.classList.add('scale-110', 'text-yellow-300');
                 setTimeout(() => {
@@ -202,7 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     speakQueue(numStr, computerName);
                 }
 
-                prevServingNumber = numStr;
+                prevCallId = callId;
+                prevCallTimestamp = callTimestamp;
             }
 
             // After first successful render of a serving number or empty state, 
@@ -223,7 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentComputerEl.classList.add('opacity-0');
             }
             currentNameEl.textContent = 'Menunggu Panggilan...';
-            prevServingNumber = null;
+            prevCallId = null;
+            prevCallTimestamp = null;
         }
 
         // Render 7 Counters Grid

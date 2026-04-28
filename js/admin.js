@@ -296,7 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${(selectedDate === getTodayDateString()) && (q.status === 'Menunggu' || q.status === 'Sedang diverifikasi' || q.status === 'Tunda') ? `
                         <div class="flex justify-end gap-2 flex-wrap">
                             ${disableActions ? `<span class="text-xs text-orange-400 font-medium italic mt-1">Diverifikasi ${q.melayaniOleh}</span>` : `
-                                ${q.status !== 'Sedang diverifikasi' ? `<button onclick="updateQueueStatus('${q.id}', 'Sedang diverifikasi')" class="px-3 py-1 bg-orange-400 hover:bg-orange-500 text-white rounded text-xs font-medium transition-colors shadow-sm">Verifikasi</button>` : ''}
+                                ${q.status !== 'Sedang diverifikasi' ? `<button onclick="updateQueueStatus('${q.id}', 'Sedang diverifikasi', true)" class="px-3 py-1 bg-orange-400 hover:bg-orange-500 text-white rounded text-xs font-medium transition-colors shadow-sm">Verifikasi</button>` : ''}
+                                ${q.status === 'Sedang diverifikasi' ? `<button onclick="updateQueueStatus('${q.id}', 'Sedang diverifikasi', true)" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors shadow-sm">Panggil Ulang</button>` : ''}
                                 ${q.status !== 'Selesai' ? `<button onclick="updateQueueStatus('${q.id}', 'Selesai')" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-medium transition-colors shadow-sm">Selesai</button>` : ''}
                                 ${q.status !== 'Tunda' ? `<button onclick="updateQueueStatus('${q.id}', 'Tunda')" class="px-3 py-1 bg-orange-700 hover:bg-orange-800 text-white rounded text-xs font-medium transition-colors shadow-sm">Tunda</button>` : ''}
                             `}
@@ -442,8 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Global Action for Buttons (Since they are created dynamically)
-    window.updateQueueStatus = async (id, newStatus) => {
-        if (!confirm(`Yakin ingin mengubah status antrian menjadi "${newStatus}"?`)) return;
+    window.updateQueueStatus = async (id, newStatus, skipConfirm = false) => {
+        if (!skipConfirm && !confirm(`Yakin ingin mengubah status antrian menjadi "${newStatus}"?`)) return;
 
         try {
             if (useMock) {
@@ -455,6 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let updates = { status: newStatus };
                 if (newStatus === 'Sedang diverifikasi') {
                     updates.melayaniOleh = currentUser || 'superadmin';
+                    updates.lastCalledAt = Date.now(); // Tambahkan timestamp panggilan
                 }
                 await database.ref(`queues/${dateKey}/${id}`).update(updates);
                 // No need to call renderTable, Firebase Real-time listener will trigger
