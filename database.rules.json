@@ -1,0 +1,26 @@
+{
+  "rules": {
+    "queues": {
+      ".read": true,
+      "$date": {
+        ".write": true
+      }
+    },
+    "counters": {
+      ".read": true,
+      ".write": true
+    },
+    "counters_state": {
+      ".read": true,
+      ".write": true
+    },
+    "settings": {
+      ".read": true,
+      ".write": true
+    },
+    "system_status": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
