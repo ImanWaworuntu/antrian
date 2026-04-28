@@ -21,14 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (audioOverlay) {
         audioOverlay.addEventListener('click', () => {
             if ('speechSynthesis' in window) {
-                // Play silent utterance to unlock audio context
-                const utterance = new SpeechSynthesisUtterance('');
+                // Play a greeting to confirm audio is working
+                const utterance = new SpeechSynthesisUtterance('Monitor aktif. Menunggu antrian.');
+                utterance.lang = 'id-ID';
                 window.speechSynthesis.speak(utterance);
             }
             audioOverlay.classList.add('opacity-0', 'pointer-events-none');
             setTimeout(() => audioOverlay.remove(), 300);
         });
     }
+
+    // Manual Voice Test Function (can be called from console)
+    window.testVoice = () => {
+        speakQueue("000", "Komputer Percobaan");
+    };
 
     // Live Clock
     const updateClock = () => {
@@ -78,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let prevServingNumber = null;
     let prevServingQueues = [];
     let latestCalledQueue = null;
+    let isInitialLoad = true;
     
     // Global Data Store
     let globalQueues = [];
@@ -191,12 +198,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 500);
 
                 // Play Voice Announcement
-                if (prevServingNumber !== null) { // Only announce if not the initial load
+                if (!isInitialLoad) { 
                     speakQueue(numStr, computerName);
                 }
 
                 prevServingNumber = numStr;
             }
+
+            // After first successful render of a serving number or empty state, 
+            // we are no longer in "initial load" phase
+            isInitialLoad = false;
 
             currentNumberEl.textContent = numStr;
             if(currentComputerEl) {
