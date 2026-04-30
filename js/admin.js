@@ -371,8 +371,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         mockDB.getMaxQueue((max) => {
-            if (maxQueueInput.value != max) {
-                maxQueueInput.value = max;
+            const displayMax = (max !== null && max !== "") ? max : 200;
+            if (maxQueueInput.value != displayMax) {
+                maxQueueInput.value = displayMax;
             }
         });
     } else {
@@ -383,9 +384,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         database.ref('settings/max_queue').on('value', (snapshot) => {
-            const max = snapshot.val() || '';
-            if (maxQueueInput.value != max) {
-                maxQueueInput.value = max;
+            const max = snapshot.val();
+            const displayMax = (max !== null && max !== "") ? max : 200;
+            if (maxQueueInput.value != displayMax) {
+                maxQueueInput.value = displayMax;
             }
         });
     }
