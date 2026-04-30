@@ -20,14 +20,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle Audio Unlock Overlay
     if (audioOverlay) {
         audioOverlay.addEventListener('click', () => {
+            // Re-initialize audio context if needed
             if ('speechSynthesis' in window) {
-                // Play a greeting to confirm audio is working
-                const utterance = new SpeechSynthesisUtterance('Monitor aktif. Menunggu antrian.');
+                window.speechSynthesis.cancel(); // Reset any stuck speech
+                const utterance = new SpeechSynthesisUtterance('Suara aktif');
                 utterance.lang = 'id-ID';
+                utterance.volume = 1.0;
                 window.speechSynthesis.speak(utterance);
             }
             audioOverlay.classList.add('opacity-0', 'pointer-events-none');
             setTimeout(() => audioOverlay.remove(), 300);
+        });
+    }
+
+    // Fullscreen Toggle
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
         });
     }
 
@@ -91,42 +107,43 @@ document.addEventListener('DOMContentLoaded', () => {
     let countersState = {};
 
     const speakQueue = (numberStr, computerName) => {
-        if (!('speechSynthesis' in window)) return;
+        if (!('speechSynthesis' in window)) {
+            console.error("Speech Synthesis tidak didukung di browser ini.");
+            return;
+        }
         
-        console.log("Memanggil antrian:", numberStr, "ke", computerName);
+        // Cancel any ongoing speech to avoid queueing up too many
+        window.speechSynthesis.cancel();
 
         const digitMap = {
-            '0': 'nol',
-            '1': 'satu',
-            '2': 'dua',
-            '3': 'tiga',
-            '4': 'empat',
-            '5': 'lima',
-            '6': 'enam',
-            '7': 'tujuh',
-            '8': 'delapan',
-            '9': 'sembilan'
+            '0': 'nol', '1': 'satu', '2': 'dua', '3': 'tiga', '4': 'empat',
+            '5': 'lima', '6': 'enam', '7': 'tujuh', '8': 'delapan', '9': 'sembilan'
         };
         const spelledNumber = numberStr.split('').map(d => digitMap[d] || d).join(' ');
-        const text = `Antrian, ${spelledNumber}, ke ${computerName}`;
+        const text = `Antrian, nomor, ${spelledNumber}, ke, ${computerName}`;
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'id-ID';
-        utterance.rate = 0.85;
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
         
-        // Explicitly set an Indonesian voice if available
-        const voices = window.speechSynthesis.getVoices();
-        const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang === 'id_ID' || v.lang.includes('id'));
+        // Ensure Indonesian voice
+        let voices = window.speechSynthesis.getVoices();
+        if (voices.length === 0) {
+            // Try fetching voices again if not loaded
+            voices = window.speechSynthesis.getVoices();
+        }
+        
+        const idVoice = voices.find(v => v.lang.includes('id') || v.name.includes('Indonesian') || v.name.includes('Google Bahasa Indonesia'));
         if (idVoice) {
             utterance.voice = idVoice;
+        } else {
+            console.warn("Suara Bahasa Indonesia tidak ditemukan, menggunakan suara default.");
         }
         
-        window.speechUtterances.push(utterance); // Prevent GC
-        
-        // Clean up old utterances
-        if (window.speechUtterances.length > 10) {
-            window.speechUtterances.shift();
-        }
+        window.speechUtterances.push(utterance);
+        if (window.speechUtterances.length > 5) window.speechUtterances.shift();
 
         window.speechSynthesis.speak(utterance);
     };
