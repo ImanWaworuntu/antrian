@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let systemStatus = 'auto'; // 'auto', 'open', 'closed'
-    let maxQueueLimit = null; // null means no limit
+    let maxQueueLimit = 200; // Default 200
     let currentQueueCount = 0;
 
     // Check Operating Hours (08:00 - 12:00 WITA, Senin - Jumat) or override
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateViewBasedOnStatus();
         });
         mockDB.getMaxQueue((max) => {
-            maxQueueLimit = max ? parseInt(max) : null;
+            maxQueueLimit = (max !== null && max !== "") ? parseInt(max) : 200;
             updateViewBasedOnStatus();
         });
         // mock count
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         database.ref('settings/max_queue').on('value', (snapshot) => {
             const max = snapshot.val();
-            maxQueueLimit = max ? parseInt(max) : null;
+            maxQueueLimit = (max !== null && max !== "") ? parseInt(max) : 200;
             updateViewBasedOnStatus();
         });
         const dateKey = getTodayDateString();
