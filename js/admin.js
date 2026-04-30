@@ -293,16 +293,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4">${statusBadge}</td>
                 <td class="px-6 py-4">${adminCell}</td>
                 <td class="px-6 py-4 text-right">
-                    ${(selectedDate === getTodayDateString()) && (q.status === 'Menunggu' || q.status === 'Sedang diverifikasi' || q.status === 'Tunda') ? `
-                        <div class="flex justify-end gap-2 flex-wrap">
+                    <div class="flex justify-end gap-2 flex-wrap">
+                        ${(selectedDate === getTodayDateString()) && (q.status === 'Menunggu' || q.status === 'Sedang diverifikasi' || q.status === 'Tunda') ? `
                             ${disableActions ? `<span class="text-xs text-orange-400 font-medium italic mt-1">Diverifikasi ${q.melayaniOleh}</span>` : `
                                 ${q.status !== 'Sedang diverifikasi' ? `<button onclick="updateQueueStatus('${q.id}', 'Sedang diverifikasi', true)" class="px-3 py-1 bg-orange-400 hover:bg-orange-500 text-white rounded text-xs font-medium transition-colors shadow-sm">Verifikasi</button>` : ''}
                                 ${q.status === 'Sedang diverifikasi' ? `<button onclick="updateQueueStatus('${q.id}', 'Sedang diverifikasi', true)" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors shadow-sm">Panggil Ulang</button>` : ''}
                                 ${q.status !== 'Selesai' ? `<button onclick="updateQueueStatus('${q.id}', 'Selesai')" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-medium transition-colors shadow-sm">Selesai</button>` : ''}
                                 ${q.status !== 'Tunda' ? `<button onclick="updateQueueStatus('${q.id}', 'Tunda')" class="px-3 py-1 bg-orange-700 hover:bg-orange-800 text-white rounded text-xs font-medium transition-colors shadow-sm">Tunda</button>` : ''}
                             `}
-                        </div>
-                    ` : `<span class="text-xs text-gray-400 italic">No Action</span>`}
+                        ` : `
+                            ${(selectedDate !== getTodayDateString() || q.status === 'Selesai') ? `<span class="text-xs text-gray-400 italic self-center">${q.status === 'Selesai' ? 'Selesai' : 'History'}</span>` : ''}
+                        `}
+                        
+                        ${currentUser === 'superadmin' ? `
+                            <button onclick="deleteQueueItem('${q.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium transition-colors shadow-sm">Hapus</button>
+                        ` : ''}
+                    </div>
                 </td>
             `;
             tableBody.appendChild(tr);
@@ -464,6 +470,30 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error updating status:", error);
             alert("Gagal memperbarui status.");
+        }
+    };
+    
+    // Delete Queue Item Logic (Superadmin only)
+    window.deleteQueueItem = async (id) => {
+        if (currentUser !== 'superadmin') {
+            alert("Hanya superadmin yang bisa menghapus antrian.");
+            return;
+        }
+
+        if (!confirm('Apakah Anda yakin ingin menghapus antrian ini? Tindakan ini tidak bisa dibatalkan.')) return;
+
+        try {
+            if (useMock) {
+                // Mock delete not fully implemented, but let's assume it works
+                alert("Fitur hapus tidak tersedia di mode Mock.");
+            } else {
+                const dateKey = selectedDate;
+                await database.ref(`queues/${dateKey}/${id}`).remove();
+                alert("Antrian berhasil dihapus.");
+            }
+        } catch (error) {
+            console.error("Error deleting item:", error);
+            alert("Gagal menghapus antrian.");
         }
     };
 });
