@@ -139,6 +139,29 @@ const mockDB = {
             resolve();
         });
     },
+    _scheduleListener: null,
+    getSchedule: (callback) => {
+        const update = () => {
+            const defaultSchedule = {
+                openTime: "08:00",
+                closeTime: "12:00",
+                operatingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+            };
+            const schedule = JSON.parse(localStorage.getItem('schedule') || JSON.stringify(defaultSchedule));
+            callback(schedule);
+        };
+        update();
+        
+        if (mockDB._scheduleListener) window.removeEventListener('storage', mockDB._scheduleListener);
+        mockDB._scheduleListener = update;
+        window.addEventListener('storage', mockDB._scheduleListener);
+    },
+    setSchedule: (schedule) => {
+        return new Promise((resolve) => {
+            localStorage.setItem('schedule', JSON.stringify(schedule));
+            resolve();
+        });
+    },
     resetQueue: () => {
         return new Promise((resolve) => {
             const today = mockDB.getTodayKey();

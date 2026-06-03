@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (limitContainer) limitContainer.classList.add('hidden');
                 if (resetBtn) resetBtn.classList.add('hidden');
                 if (historyContainer) historyContainer.classList.add('hidden');
+                const scheduleBtnContainer = document.getElementById('schedule-btn-container');
+                if (scheduleBtnContainer) scheduleBtnContainer.classList.add('hidden');
                 if (istirahatBtn) istirahatBtn.classList.remove('hidden');
 
                 // Listen to Istirahat State
@@ -59,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (limitContainer) limitContainer.classList.remove('hidden');
                 if (resetBtn) resetBtn.classList.remove('hidden');
                 if (historyContainer) historyContainer.classList.remove('hidden');
+                const scheduleBtnContainer = document.getElementById('schedule-btn-container');
+                if (scheduleBtnContainer) scheduleBtnContainer.classList.remove('hidden');
                 if (istirahatBtn) istirahatBtn.classList.add('hidden');
             }
 
@@ -95,8 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Initialize View
-    checkAuth();
+    // checkAuth() will be called at the end of the file
 
     // Password Visibility Toggle
     const togglePassword = document.getElementById('toggle-password');
@@ -425,6 +428,105 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500); // debounce
     });
 
+    // Schedule Settings Logic
+    const scheduleBtn = document.getElementById('schedule-btn');
+    const scheduleModal = document.getElementById('schedule-modal');
+    const closeScheduleBtn = document.getElementById('close-schedule-btn');
+    const cancelScheduleBtn = document.getElementById('cancel-schedule-btn');
+    const scheduleForm = document.getElementById('schedule-form');
+
+    let currentSchedule = {
+        openTime: "08:00",
+        closeTime: "12:00",
+        operatingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+    };
+
+    const updateAutoOptionText = () => {
+        const autoOption = document.querySelector('#system-status-select option[value="auto"]');
+        if (autoOption) {
+            const daysMap = { 'Mon': 'Sen', 'Tue': 'Sel', 'Wed': 'Rab', 'Thu': 'Kam', 'Fri': 'Jum', 'Sat': 'Sab', 'Sun': 'Min' };
+            const daysTranslated = currentSchedule.operatingDays.map(d => daysMap[d]).join(', ');
+            autoOption.textContent = `Auto (${currentSchedule.openTime} - ${currentSchedule.closeTime}, ${daysTranslated || 'Belum diatur'})`;
+        }
+    };
+
+    if (useMock) {
+        mockDB.getSchedule((schedule) => {
+            if (schedule) currentSchedule = schedule;
+            updateAutoOptionText();
+        });
+    } else {
+        database.ref('settings/schedule').on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                currentSchedule = snapshot.val();
+                if (!currentSchedule.operatingDays) currentSchedule.operatingDays = [];
+                updateAutoOptionText();
+            }
+        });
+    }
+
+    const openScheduleModal = () => {
+        document.getElementById('open-time-input').value = currentSchedule.openTime;
+        document.getElementById('close-time-input').value = currentSchedule.closeTime;
+        
+        const checkboxes = document.querySelectorAll('input[name="days"]');
+        checkboxes.forEach(cb => {
+            cb.checked = currentSchedule.operatingDays.includes(cb.value);
+        });
+
+        scheduleModal.classList.remove('hidden');
+    };
+
+    const closeScheduleModal = () => {
+        scheduleModal.classList.add('hidden');
+    };
+
+    if (scheduleBtn) scheduleBtn.addEventListener('click', openScheduleModal);
+    if (closeScheduleBtn) closeScheduleBtn.addEventListener('click', closeScheduleModal);
+    if (cancelScheduleBtn) cancelScheduleBtn.addEventListener('click', closeScheduleModal);
+
+    if (scheduleForm) {
+        scheduleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const openTime = document.getElementById('open-time-input').value;
+            const closeTime = document.getElementById('close-time-input').value;
+            const daysCheckboxes = document.querySelectorAll('input[name="days"]:checked');
+            const operatingDays = Array.from(daysCheckboxes).map(cb => cb.value);
+
+            if (operatingDays.length === 0) {
+                alert("Pilih minimal satu hari operasional.");
+                return;
+            }
+
+            const newSchedule = { openTime, closeTime, operatingDays };
+
+            const saveBtnText = document.getElementById('save-schedule-text');
+            const saveBtnSpinner = document.getElementById('save-schedule-spinner');
+            const saveBtn = document.getElementById('save-schedule-btn');
+            
+            saveBtn.disabled = true;
+            saveBtnText.textContent = 'Menyimpan...';
+            saveBtnSpinner.classList.remove('hidden');
+
+            try {
+                if (useMock) {
+                    await mockDB.setSchedule(newSchedule);
+                } else {
+                    await database.ref('settings/schedule').set(newSchedule);
+                }
+                closeScheduleModal();
+                alert("Pengaturan jadwal berhasil disimpan.");
+            } catch (error) {
+                console.error("Error saving schedule:", error);
+                alert("Gagal menyimpan jadwal.");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtnText.textContent = 'Simpan Jadwal';
+                saveBtnSpinner.classList.add('hidden');
+            }
+        });
+    }
+
     // Reset Queue Logic
     resetBtn.addEventListener('click', async () => {
         if (selectedDate !== getTodayDateString()) {
@@ -498,4 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Gagal menghapus antrian.");
         }
     };
+
+    // Initialize View once everything is defined
+    checkAuth();
 });

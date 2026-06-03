@@ -69,6 +69,13 @@
                     <input type="number" id="max-queue-input" class="w-16 text-sm bg-transparent font-semibold outline-none text-gray-700" placeholder="-" min="0">
                 </div>
 
+                <div id="schedule-btn-container" class="hidden flex items-center gap-2">
+                    <button id="schedule-btn" class="text-sm bg-purple-50 hover:bg-purple-100 text-purple-600 font-medium py-1.5 px-3 rounded-lg transition-colors border border-purple-200 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        Jadwal
+                    </button>
+                </div>
+
                 <div id="history-container" class="hidden flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
                     <label for="history-date-input" class="text-xs text-gray-500 font-medium">History:</label>
                     <input type="date" id="history-date-input" class="text-sm bg-transparent font-semibold outline-none text-gray-700 cursor-pointer">
@@ -158,6 +165,54 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Schedule Settings Modal -->
+    <div id="schedule-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h2 class="font-bold text-gray-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Pengaturan Jadwal Otomatis
+                </h2>
+                <button id="close-schedule-btn" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-1 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="schedule-form" class="space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jam Buka (WITA)</label>
+                            <input type="time" id="open-time-input" required class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jam Tutup (WITA)</label>
+                            <input type="time" id="close-time-input" required class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 border-b border-gray-100 pb-2">Hari Operasional</label>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" name="days" value="Mon" class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"> <span class="group-hover:text-purple-700">Senin</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" name="days" value="Tue" class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"> <span class="group-hover:text-purple-700">Selasa</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" name="days" value="Wed" class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"> <span class="group-hover:text-purple-700">Rabu</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" name="days" value="Thu" class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"> <span class="group-hover:text-purple-700">Kamis</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" name="days" value="Fri" class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"> <span class="group-hover:text-purple-700">Jumat</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" name="days" value="Sat" class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"> <span class="group-hover:text-purple-700">Sabtu</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" name="days" value="Sun" class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"> <span class="group-hover:text-purple-700">Minggu</span></label>
+                        </div>
+                    </div>
+                    <div class="pt-4 flex justify-end gap-2 border-t border-gray-100">
+                        <button type="button" id="cancel-schedule-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors">Batal</button>
+                        <button type="submit" id="save-schedule-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center">
+                            <span id="save-schedule-text">Simpan Jadwal</span>
+                            <div id="save-schedule-spinner" class="hidden animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDKs -->

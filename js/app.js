@@ -33,8 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let systemStatus = 'auto'; // 'auto', 'open', 'closed'
     let maxQueueLimit = 200; // Default 200
     let currentQueueCount = 0;
+    let systemSchedule = {
+        openTime: "08:00",
+        closeTime: "12:00",
+        operatingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+    };
 
-    // Check Operating Hours (08:00 - 12:00 WITA, Senin - Jumat) or override
+    // Check Operating Hours based on schedule
     const checkOperatingHours = () => {
         if (systemStatus === 'open') return true;
         if (systemStatus === 'closed') return false;
@@ -46,19 +51,18 @@ document.addEventListener('DOMContentLoaded', () => {
             timeZone: 'Asia/Makassar',
             weekday: 'short'
         });
-        const isWeekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(dayStr);
+        const isOperatingDay = systemSchedule.operatingDays.includes(dayStr);
 
-        // Get hour in WITA (Asia/Makassar)
-        const hourStr = now.toLocaleTimeString('en-US', {
+        // Get time in WITA (HH:mm format)
+        const timeFormatter = new Intl.DateTimeFormat('en-GB', {
             timeZone: 'Asia/Makassar',
             hour: '2-digit',
+            minute: '2-digit',
             hour12: false
         });
+        const currentTimeStr = timeFormatter.format(now);
         
-        const hour = parseInt(hourStr, 10);
-        
-        // Logika Waktu: 08:00 hingga 12:00, Senin - Jumat
-        return isWeekday && hour >= 8 && hour < 12;
+        return isOperatingDay && currentTimeStr >= systemSchedule.openTime && currentTimeStr < systemSchedule.closeTime;
     };
 
     const updateViewBasedOnStatus = () => {
@@ -80,6 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
             queueForm.classList.add('hidden');
             closedMessage.classList.remove('hidden');
             fullMessage.classList.add('hidden');
+            
+            // Update closed message text dynamically
+            const closedTextEl = closedMessage.querySelector('p');
+            if (closedTextEl) {
+                const daysMap = { 'Mon': 'Senin', 'Tue': 'Selasa', 'Wed': 'Rabu', 'Thu': 'Kamis', 'Fri': 'Jumat', 'Sat': 'Sabtu', 'Sun': 'Minggu' };
+                const daysTranslated = systemSchedule.operatingDays.map(d => daysMap[d]).join(', ');
+                closedTextEl.innerHTML = `Pendaftaran Antrian Ditutup.<br>Buka Kembali Hari: ${daysTranslated || 'Belum diatur'}, Jam ${systemSchedule.openTime} - ${systemSchedule.closeTime} WITA.`;
+            }
         }
     };
 
@@ -91,6 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         mockDB.getMaxQueue((max) => {
             maxQueueLimit = (max !== null && max !== "") ? parseInt(max) : 200;
+            updateViewBasedOnStatus();
+        });
+        mockDB.getSchedule((schedule) => {
+            if (schedule) systemSchedule = schedule;
             updateViewBasedOnStatus();
         });
         // mock count
@@ -110,12 +126,25 @@ document.addEventListener('DOMContentLoaded', () => {
             maxQueueLimit = (max !== null && max !== "") ? parseInt(max) : 200;
             updateViewBasedOnStatus();
         });
+        database.ref('settings/schedule').on('value', (snapshot) => {
+            const schedule = snapshot.val();
+            if (schedule) {
+                if (!schedule.operatingDays) schedule.operatingDays = [];
+                systemSchedule = schedule;
+            }
+            updateViewBasedOnStatus();
+        });
         const dateKey = getTodayDateString();
         database.ref(`counters/${dateKey}`).on('value', (snapshot) => {
             currentQueueCount = snapshot.val() || 0;
             updateViewBasedOnStatus();
         });
     }
+
+    // Auto-update UI every minute to handle time-based open/close seamlessly
+    setInterval(() => {
+        updateViewBasedOnStatus();
+    }, 60000);
 
     // Initialize View
     setTimeout(() => {
@@ -129,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Final time check on submit
         if (!checkOperatingHours()) {
-            alert('Maaf, waktu pendaftaran sudah ditutup. Silakan kembali di hari kerja (Senin-Jumat) jam 08:00 WITA.');
+            alert(`Maaf, waktu pendaftaran sudah ditutup. Silakan kembali pada jam ${systemSchedule.openTime} - ${systemSchedule.closeTime} WITA di hari kerja.`);
             window.location.reload();
             return;
         }
