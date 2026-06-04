@@ -8,6 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
     window.speechUtterances = []; // To prevent garbage collection bug in some browsers
     window.prevCallTimestamps = {}; // Tracks lastCalledAt for each queue id
 
+    // Helper: Escape HTML to prevent XSS
+    const escapeHTML = (str) => {
+        if (!str) return '';
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    };
+
     // Initialize Voices
     if ('speechSynthesis' in window) {
         window.speechSynthesis.getVoices();
@@ -246,11 +260,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         card.className = `${baseClass} bg-slate-800/80 border border-slate-600 shadow-lg`;
                     }
                     
+                    
+                    const safeNamaMurid = escapeHTML(counter.queue.namaMurid);
+
                     card.innerHTML = `
                         <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50 pointer-events-none"></div>
                         <div class="text-xs md:text-sm lg:text-base text-slate-400 font-semibold tracking-wider uppercase relative z-10">${counter.name}</div>
                         <div class="text-5xl md:text-6xl lg:text-7xl font-black text-white relative z-10 my-auto ${isLatestGlobal ? 'text-orange-400 drop-shadow-lg' : ''}">${numStr}</div>
-                        <div class="text-sm md:text-base lg:text-lg font-bold text-yellow-400 truncate w-full text-center capitalize relative z-10 px-2" title="${counter.queue.namaMurid}">${counter.queue.namaMurid}</div>
+                        <div class="text-sm md:text-base lg:text-lg font-bold text-yellow-400 truncate w-full text-center capitalize relative z-10 px-2" title="${safeNamaMurid}">${safeNamaMurid}</div>
                     `;
                     
                     if (isJustCalled) {
@@ -299,6 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show up to 5 next queues
             const nextQueues = waiting.slice(0, 5);
             nextQueues.forEach(q => {
+                const safeNamaMurid = escapeHTML(q.namaMurid);
                 const item = document.createElement('div');
                 item.className = "bg-slate-800/50 border border-slate-700 rounded-xl p-3 flex flex-col justify-center";
                 item.innerHTML = `
@@ -306,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="text-xs lg:text-sm text-slate-400 uppercase tracking-wider font-semibold truncate">Antrian ${q.noUrut}</div>
                         <div class="text-yellow-500 font-bold text-[10px] lg:text-xs bg-yellow-500/10 px-2 py-1 rounded uppercase tracking-wider shrink-0">Menunggu</div>
                     </div>
-                    <div class="text-lg lg:text-xl font-bold text-slate-200 truncate capitalize" title="${q.namaMurid}">${q.namaMurid}</div>
+                    <div class="text-lg lg:text-xl font-bold text-slate-200 truncate capitalize" title="${safeNamaMurid}">${safeNamaMurid}</div>
                 `;
                 waitingListEl.appendChild(item);
             });

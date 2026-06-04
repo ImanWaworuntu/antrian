@@ -118,33 +118,74 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Helper: Escape HTML to prevent XSS
+    const escapeHTML = (str) => {
+        if (!str) return '';
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    };
+
+    // Helper: Hash password
+    async function hashPassword(password) {
+        const msgBuffer = new TextEncoder().encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
     // Login Logic
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const user = document.getElementById('username').value;
         const pass = document.getElementById('password').value;
 
-        // Credentials requested by user: admin1 to admin7 with password SMA&7Makassar
+        // Credentials requested by user: admin1 to admin7
         const validAdmins = ['admin1', 'admin2', 'admin3', 'admin4', 'admin5', 'admin6', 'admin7'];
 
-        let loginSuccess = false;
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Memverifikasi...';
+        submitBtn.disabled = true;
 
-        if (user === 'superadmin' && pass === 'admin') {
-            loginSuccess = true;
-        } else if (validAdmins.includes(user) && pass === 'SMA&7Makassar') {
-            loginSuccess = true;
-        }
+        try {
+            const passHash = await hashPassword(pass);
+            let loginSuccess = false;
 
-        if (loginSuccess) {
-            isAuthenticated = true;
-            currentUser = user;
-            sessionStorage.setItem('adminAuth', 'true');
-            sessionStorage.setItem('adminUser', user);
-            loginError.classList.add('hidden');
-            loginForm.reset();
-            checkAuth();
-        } else {
-            loginError.classList.remove('hidden');
+            // Hashed superadmin password
+            const superHash = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918';
+            // Hashed normal admin password
+            const adminHash = '3298546f96358cdf37080f96c18eddc75a74d5f5361c95812dcd37650610c2eb';
+
+            if (user === 'superadmin' && passHash === superHash) {
+                loginSuccess = true;
+            } else if (validAdmins.includes(user) && passHash === adminHash) {
+                loginSuccess = true;
+            }
+
+            if (loginSuccess) {
+                isAuthenticated = true;
+                currentUser = user;
+                sessionStorage.setItem('adminAuth', 'true');
+                sessionStorage.setItem('adminUser', user);
+                loginError.classList.add('hidden');
+                loginForm.reset();
+                checkAuth();
+            } else {
+                loginError.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("Terjadi kesalahan sistem saat verifikasi.");
+        } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
         }
     });
 
@@ -293,11 +334,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tr = document.createElement('tr');
             tr.className = "hover:bg-gray-50 transition-colors";
+            
+            const safeNamaMurid = escapeHTML(q.namaMurid);
+            const safeNamaOrtu = escapeHTML(q.namaOrtu);
+            const safeNoTelp = escapeHTML(q.noTelp);
+            
             tr.innerHTML = `
                 <td class="px-6 py-4 font-semibold text-gray-800">#${String(q.noUrut).padStart(3, '0')}</td>
-                <td class="px-6 py-4 font-medium text-blue-600">${q.namaMurid}</td>
-                <td class="px-6 py-4 text-gray-600">${q.namaOrtu}</td>
-                <td class="px-6 py-4 text-gray-600"><a href="https://wa.me/${q.noTelp}" target="_blank" class="hover:text-green-600">${q.noTelp}</a></td>
+                <td class="px-6 py-4 font-medium text-blue-600">${safeNamaMurid}</td>
+                <td class="px-6 py-4 text-gray-600">${safeNamaOrtu}</td>
+                <td class="px-6 py-4 text-gray-600"><a href="https://wa.me/${safeNoTelp}" target="_blank" class="hover:text-green-600">${safeNoTelp}</a></td>
                 <td class="px-6 py-4 text-gray-500">${formatTime(q.timestamp)}</td>
                 <td class="px-6 py-4">${statusBadge}</td>
                 <td class="px-6 py-4">${adminCell}</td>
