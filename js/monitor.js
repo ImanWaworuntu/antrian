@@ -112,12 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // We do not cancel ongoing speech so that concurrent calls are queued and announced sequentially
         // window.speechSynthesis.cancel();
 
-        const digitMap = {
-            '0': 'nol', '1': 'satu', '2': 'dua', '3': 'tiga', '4': 'empat',
-            '5': 'lima', '6': 'enam', '7': 'tujuh', '8': 'delapan', '9': 'sembilan'
-        };
-        const spelledNumber = numberStr.split('').map(d => digitMap[d] || d).join(' ');
-        const text = `Antrian, nomor, ${spelledNumber}, ke, ${computerName}`;
+        const numInt = parseInt(numberStr, 10);
+        const text = `Antrian, nomor, ${numInt}, ke, ${computerName}`;
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'id-ID';
@@ -221,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="text-xl md:text-2xl lg:text-3xl font-bold text-red-500 mt-2 lg:mt-4 tracking-widest">ISTIRAHAT</div>
                     `;
                 } else if (counter.queue) {
-                    const numStr = String(counter.queue.noUrut).padStart(3, '0');
+                    const numStr = String(counter.queue.noUrut);
                     const callId = counter.queue.id;
                     const callTimestamp = counter.queue.lastCalledAt || 0;
                     
@@ -250,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     card.innerHTML = `
                         <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50 pointer-events-none"></div>
                         <div class="text-xs md:text-sm lg:text-base text-slate-400 font-semibold tracking-wider uppercase relative z-10">${counter.name}</div>
-                        <div class="text-4xl md:text-5xl lg:text-6xl font-black text-white relative z-10 my-auto ${isLatestGlobal ? 'text-orange-400 drop-shadow-lg' : ''}">#${numStr}</div>
+                        <div class="text-5xl md:text-6xl lg:text-7xl font-black text-white relative z-10 my-auto ${isLatestGlobal ? 'text-orange-400 drop-shadow-lg' : ''}">${numStr}</div>
                         <div class="text-sm md:text-base lg:text-lg font-bold text-yellow-400 truncate w-full text-center capitalize relative z-10 px-2" title="${counter.queue.namaMurid}">${counter.queue.namaMurid}</div>
                     `;
                     
@@ -292,26 +288,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Waiting List (Next 5)
         const waiting = queues.filter(q => q.status === 'Menunggu');
-        waitingCountEl.textContent = `${waiting.length} Menunggu`;
+        
+        // Update header count text
+        const waitingCountSpan = document.getElementById('waiting-count');
+        if (waitingCountSpan) {
+            waitingCountSpan.textContent = `${waiting.length} Menunggu`;
+        }
 
         waitingListEl.innerHTML = '';
         
         if (waiting.length === 0) {
-            waitingListEl.innerHTML = '<div class="text-center text-slate-500 py-10">Belum ada antrian menunggu.</div>';
+            waitingListEl.innerHTML = '<div class="text-center text-slate-500 py-10">Belum ada antrian.</div>';
         } else {
             // Show up to 5 next queues
             const nextQueues = waiting.slice(0, 5);
             nextQueues.forEach(q => {
                 const item = document.createElement('div');
-                item.className = "bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-center justify-between";
+                item.className = "bg-slate-800/50 border border-slate-700 rounded-xl p-3 flex flex-col justify-center";
                 item.innerHTML = `
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-start mb-1">
-                            <div class="text-sm text-slate-400 uppercase tracking-wider font-semibold">Antrian #${String(q.noUrut).padStart(3, '0')}</div>
-                            <div class="text-yellow-500 font-medium text-xs bg-yellow-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Menunggu</div>
-                        </div>
-                        <div class="text-xl font-bold text-slate-200 truncate capitalize" title="${q.namaMurid}">${q.namaMurid}</div>
+                    <div class="flex justify-between items-center mb-1 gap-2">
+                        <div class="text-xs lg:text-sm text-slate-400 uppercase tracking-wider font-semibold truncate">Antrian ${q.noUrut}</div>
+                        <div class="text-yellow-500 font-bold text-[10px] lg:text-xs bg-yellow-500/10 px-2 py-1 rounded uppercase tracking-wider shrink-0">Menunggu</div>
                     </div>
+                    <div class="text-lg lg:text-xl font-bold text-slate-200 truncate capitalize" title="${q.namaMurid}">${q.namaMurid}</div>
                 `;
                 waitingListEl.appendChild(item);
             });

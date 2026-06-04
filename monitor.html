@@ -63,9 +63,9 @@
         <div class="w-1/4 flex flex-col h-full">
             
             <div class="glass-panel rounded-3xl p-6 flex-1 flex flex-col">
-                <h3 class="text-xl font-semibold text-slate-300 uppercase tracking-wider mb-4 border-b border-slate-700 pb-3 flex justify-between">
+                <h3 class="text-lg xl:text-xl font-semibold text-slate-300 uppercase tracking-wider mb-4 border-b border-slate-700 pb-3 flex flex-col 2xl:flex-row 2xl:justify-between 2xl:items-center gap-2">
                     <span>Selanjutnya</span>
-                    <span class="text-yellow-500 text-sm bg-yellow-500/10 px-3 py-1 rounded-full" id="waiting-count">0 Menunggu</span>
+                    <span class="text-yellow-500 text-xs xl:text-sm bg-yellow-500/10 px-3 py-1 rounded-full whitespace-nowrap w-fit" id="waiting-count">0 Menunggu</span>
                 </h3>
                 
                 <div id="waiting-list" class="flex-1 overflow-hidden flex flex-col gap-4">
@@ -88,8 +88,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <!-- App Scripts -->
-    <script src="js/firebase-config.js?v=1.0.2"></script>
-    <script src="js/monitor.js?v=1.0.2"></script>
+    <script src="js/firebase-config.js?v=1.0.3"></script>
+    <script src="js/monitor.js?v=1.0.3"></script>
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
