@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elements
     const clockTime = document.getElementById('clock-time');
     const clockDate = document.getElementById('clock-date');
-    const currentNumberEl = document.getElementById('current-serving-number');
-    const currentNameEl = document.getElementById('current-serving-name');
     const waitingListEl = document.getElementById('waiting-list');
     const waitingCountEl = document.getElementById('waiting-count');
     const audioOverlay = document.getElementById('audio-unlock-overlay');
@@ -93,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${y}-${m}-${d}`;
     };
 
-    const currentComputerEl = document.getElementById('current-serving-computer');
     const countersContainerEl = document.getElementById('counters-container');
 
     // State for animations and latest call
@@ -199,87 +196,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
         prevServingQueues = [...serving];
 
-        // Render Main Display (Latest Call)
-        if (latestCalledQueue) {
-            const numStr = String(latestCalledQueue.noUrut).padStart(3, '0');
-            const adminId = latestCalledQueue.melayaniOleh;
-            const counterInfo = countersData.find(c => c.id === adminId);
-            const computerName = counterInfo ? counterInfo.name : 'Komputer -';
-            
-            const callId = latestCalledQueue.id;
-            const callTimestamp = latestCalledQueue.lastCalledAt || 0;
-            
-            // Animation & Voice trigger if this is a NEW call (new ID or new timestamp for same ID)
-            if (prevCallId !== callId || prevCallTimestamp !== callTimestamp) {
-                currentNumberEl.classList.add('scale-110', 'text-orange-400');
-                if(currentComputerEl) currentComputerEl.classList.add('scale-110', 'text-yellow-300');
-                setTimeout(() => {
-                    currentNumberEl.classList.remove('scale-110', 'text-orange-400');
-                    if(currentComputerEl) currentComputerEl.classList.remove('scale-110', 'text-yellow-300');
-                }, 500);
+        // Render Main Display (Latest Call) logic is removed. 
+        // We now handle it entirely in the 7 Counters Grid.
 
-                // Play Voice Announcement
-                if (!isInitialLoad) { 
-                    speakQueue(numStr, computerName);
-                }
-
-                prevCallId = callId;
-                prevCallTimestamp = callTimestamp;
-            }
-
-            // After first successful render of a serving number or empty state, 
-            // we are no longer in "initial load" phase
-            isInitialLoad = false;
-
-            currentNumberEl.textContent = numStr;
-            if(currentComputerEl) {
-                currentComputerEl.textContent = `Ke ${computerName}`;
-                currentComputerEl.classList.remove('opacity-0');
-            }
-            currentNameEl.textContent = `Calon Murid: ${latestCalledQueue.namaMurid}`;
-            currentNameEl.classList.remove('opacity-0');
-        } else {
-            currentNumberEl.textContent = '---';
-            if(currentComputerEl) {
-                currentComputerEl.textContent = 'Ke Komputer -';
-                currentComputerEl.classList.add('opacity-0');
-            }
-            currentNameEl.textContent = 'Menunggu Panggilan...';
-            prevCallId = null;
-            prevCallTimestamp = null;
-        }
-
-        // Render 7 Counters Grid
         if (countersContainerEl) {
             countersContainerEl.innerHTML = '';
             countersData.forEach(counter => {
                 const card = document.createElement('div');
                 
                 if (counter.state === 'istirahat') {
-                    card.className = `bg-red-900/20 border border-red-800/50 rounded-xl p-2 sm:p-3 flex flex-col justify-center items-center transition-all duration-300`;
+                    card.className = `bg-red-900/20 border border-red-800/50 rounded-2xl p-4 xl:p-6 flex flex-col justify-center items-center transition-all duration-300 h-full w-full shadow-inner`;
                     card.innerHTML = `
-                        <div class="text-[10px] sm:text-xs text-red-500/70 font-semibold tracking-wider uppercase mb-0 sm:mb-1">${counter.name}</div>
-                        <div class="text-sm sm:text-base font-bold text-red-500 mt-1 sm:mt-2 tracking-widest">ISTIRAHAT</div>
+                        <div class="text-sm md:text-lg xl:text-xl text-red-500/70 font-semibold tracking-wider uppercase">${counter.name}</div>
+                        <div class="text-2xl md:text-3xl xl:text-4xl font-bold text-red-500 mt-4 tracking-widest">ISTIRAHAT</div>
                     `;
                 } else if (counter.queue) {
                     const numStr = String(counter.queue.noUrut).padStart(3, '0');
-                    const isLatest = latestCalledQueue && latestCalledQueue.id === counter.queue.id;
+                    const callId = counter.queue.id;
+                    const callTimestamp = counter.queue.lastCalledAt || 0;
                     
-                    card.className = `bg-slate-800 border ${isLatest ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.3)]' : 'border-slate-600'} rounded-xl p-2 sm:p-3 flex flex-col justify-center items-center transition-all duration-300`;
+                    let isJustCalled = false;
+                    const isLatestGlobal = latestCalledQueue && latestCalledQueue.id === callId;
+
+                    if (isLatestGlobal && (prevCallId !== callId || prevCallTimestamp !== callTimestamp)) {
+                        isJustCalled = true;
+                        
+                        // Play Voice Announcement
+                        if (!isInitialLoad) { 
+                            speakQueue(numStr, counter.name);
+                        }
+                    }
+                    
+                    const baseClass = "rounded-2xl p-4 xl:p-6 flex flex-col justify-between items-center transition-all duration-500 h-full w-full relative overflow-hidden";
+                    
+                    if (isJustCalled) {
+                        card.className = `${baseClass} bg-slate-700 border-2 border-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.6)] scale-[1.03] z-10`;
+                    } else if (isLatestGlobal) {
+                        card.className = `${baseClass} bg-slate-800 border-2 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.2)]`;
+                    } else {
+                        card.className = `${baseClass} bg-slate-800/80 border border-slate-600 shadow-lg`;
+                    }
                     
                     card.innerHTML = `
-                        <div class="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider uppercase mb-0 sm:mb-1">${counter.name}</div>
-                        <div class="text-xl sm:text-2xl font-black text-white ${isLatest ? 'text-orange-400' : ''}">#${numStr}</div>
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50 pointer-events-none"></div>
+                        <div class="text-sm md:text-lg xl:text-xl text-slate-400 font-semibold tracking-wider uppercase relative z-10">${counter.name}</div>
+                        <div class="text-5xl md:text-[4rem] xl:text-[5rem] font-black text-white relative z-10 my-2 xl:my-4 ${isLatestGlobal ? 'text-orange-400 drop-shadow-lg' : ''}">#${numStr}</div>
+                        <div class="text-xl md:text-2xl xl:text-3xl font-bold text-yellow-400 truncate w-full text-center capitalize relative z-10 px-2" title="${counter.queue.namaMurid}">${counter.queue.namaMurid}</div>
                     `;
+                    
+                    if (isJustCalled) {
+                        setTimeout(() => {
+                            card.classList.remove('scale-[1.03]', 'shadow-[0_0_30px_rgba(249,115,22,0.6)]', 'bg-slate-700');
+                            card.classList.add('bg-slate-800', 'shadow-[0_0_15px_rgba(249,115,22,0.2)]');
+                        }, 2000); // 2 seconds highlight
+                    }
                 } else {
-                    card.className = `bg-slate-800/50 border border-slate-700/50 rounded-xl p-2 sm:p-3 flex flex-col justify-center items-center transition-all duration-300`;
+                    card.className = `bg-slate-800/30 border border-slate-700/50 rounded-2xl p-4 xl:p-6 flex flex-col justify-center items-center transition-all duration-300 h-full w-full`;
                     card.innerHTML = `
-                        <div class="text-[10px] sm:text-xs text-slate-500 font-semibold tracking-wider uppercase mb-0 sm:mb-1">${counter.name}</div>
-                        <div class="text-xl sm:text-2xl font-black text-slate-600">---</div>
+                        <div class="text-sm md:text-lg xl:text-xl text-slate-500 font-semibold tracking-wider uppercase">${counter.name}</div>
+                        <div class="text-4xl xl:text-5xl font-black text-slate-700 mt-4">---</div>
                     `;
                 }
                 countersContainerEl.appendChild(card);
             });
+        }
+
+        // Update Global State for animations
+        if (latestCalledQueue) {
+            prevCallId = latestCalledQueue.id;
+            prevCallTimestamp = latestCalledQueue.lastCalledAt || 0;
+            isInitialLoad = false;
+        } else {
+            prevCallId = null;
+            prevCallTimestamp = null;
         }
 
         // Waiting List (Next 5)
