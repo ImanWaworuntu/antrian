@@ -201,14 +201,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (countersContainerEl) {
             countersContainerEl.innerHTML = '';
-            countersData.forEach(counter => {
+            
+            const row1 = document.createElement('div');
+            row1.className = 'flex-1 grid grid-cols-4 gap-4 sm:gap-6 w-full';
+            
+            const row2Wrapper = document.createElement('div');
+            row2Wrapper.className = 'flex-1 flex justify-center w-full';
+            const row2 = document.createElement('div');
+            row2.className = 'w-3/4 grid grid-cols-3 gap-4 sm:gap-6'; 
+            row2Wrapper.appendChild(row2);
+
+            countersData.forEach((counter, index) => {
                 const card = document.createElement('div');
                 
                 if (counter.state === 'istirahat') {
-                    card.className = `bg-red-900/20 border border-red-800/50 rounded-2xl p-4 xl:p-6 flex flex-col justify-center items-center transition-all duration-300 h-full w-full shadow-inner`;
+                    card.className = `bg-red-900/20 border border-red-800/50 rounded-2xl p-4 flex flex-col justify-center items-center transition-all duration-300 h-full w-full shadow-inner`;
                     card.innerHTML = `
-                        <div class="text-sm md:text-lg xl:text-xl text-red-500/70 font-semibold tracking-wider uppercase">${counter.name}</div>
-                        <div class="text-2xl md:text-3xl xl:text-4xl font-bold text-red-500 mt-4 tracking-widest">ISTIRAHAT</div>
+                        <div class="text-xs md:text-sm lg:text-base text-red-500/70 font-semibold tracking-wider uppercase">${counter.name}</div>
+                        <div class="text-xl md:text-2xl lg:text-3xl font-bold text-red-500 mt-2 lg:mt-4 tracking-widest">ISTIRAHAT</div>
                     `;
                 } else if (counter.queue) {
                     const numStr = String(counter.queue.noUrut).padStart(3, '0');
@@ -227,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                     
-                    const baseClass = "rounded-2xl p-4 xl:p-6 flex flex-col justify-between items-center transition-all duration-500 h-full w-full relative overflow-hidden";
+                    const baseClass = "rounded-2xl p-4 flex flex-col justify-between items-center transition-all duration-500 h-full w-full relative overflow-hidden";
                     
                     if (isJustCalled) {
                         card.className = `${baseClass} bg-slate-700 border-2 border-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.6)] scale-[1.03] z-10`;
@@ -239,9 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     card.innerHTML = `
                         <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50 pointer-events-none"></div>
-                        <div class="text-sm md:text-lg xl:text-xl text-slate-400 font-semibold tracking-wider uppercase relative z-10">${counter.name}</div>
-                        <div class="text-5xl md:text-[4rem] xl:text-[5rem] font-black text-white relative z-10 my-2 xl:my-4 ${isLatestGlobal ? 'text-orange-400 drop-shadow-lg' : ''}">#${numStr}</div>
-                        <div class="text-xl md:text-2xl xl:text-3xl font-bold text-yellow-400 truncate w-full text-center capitalize relative z-10 px-2" title="${counter.queue.namaMurid}">${counter.queue.namaMurid}</div>
+                        <div class="text-xs md:text-sm lg:text-base text-slate-400 font-semibold tracking-wider uppercase relative z-10">${counter.name}</div>
+                        <div class="text-4xl md:text-5xl lg:text-6xl font-black text-white relative z-10 my-auto ${isLatestGlobal ? 'text-orange-400 drop-shadow-lg' : ''}">#${numStr}</div>
+                        <div class="text-sm md:text-base lg:text-lg font-bold text-yellow-400 truncate w-full text-center capitalize relative z-10 px-2" title="${counter.queue.namaMurid}">${counter.queue.namaMurid}</div>
                     `;
                     
                     if (isJustCalled) {
@@ -251,14 +261,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         }, 2000); // 2 seconds highlight
                     }
                 } else {
-                    card.className = `bg-slate-800/30 border border-slate-700/50 rounded-2xl p-4 xl:p-6 flex flex-col justify-center items-center transition-all duration-300 h-full w-full`;
+                    card.className = `bg-slate-800/30 border border-slate-700/50 rounded-2xl p-4 flex flex-col justify-center items-center transition-all duration-300 h-full w-full`;
                     card.innerHTML = `
-                        <div class="text-sm md:text-lg xl:text-xl text-slate-500 font-semibold tracking-wider uppercase">${counter.name}</div>
-                        <div class="text-4xl xl:text-5xl font-black text-slate-700 mt-4">---</div>
+                        <div class="text-xs md:text-sm lg:text-base text-slate-500 font-semibold tracking-wider uppercase">${counter.name}</div>
+                        <div class="text-3xl lg:text-4xl font-black text-slate-700 mt-2 lg:mt-4">---</div>
                     `;
                 }
-                countersContainerEl.appendChild(card);
+
+                // Distribute items to rows
+                if (index < 4) {
+                    row1.appendChild(card);
+                } else {
+                    row2.appendChild(card);
+                }
             });
+
+            countersContainerEl.appendChild(row1);
+            countersContainerEl.appendChild(row2Wrapper);
         }
 
         // Update Global State for animations
