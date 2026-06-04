@@ -112,8 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Cancel any ongoing speech to avoid queueing up too many
-        window.speechSynthesis.cancel();
+        // We do not cancel ongoing speech so that concurrent calls are queued and announced sequentially
+        // window.speechSynthesis.cancel();
 
         const digitMap = {
             '0': 'nol', '1': 'satu', '2': 'dua', '3': 'tiga', '4': 'empat',
@@ -297,12 +297,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = document.createElement('div');
                 item.className = "bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-center justify-between";
                 item.innerHTML = `
-                    <div>
-                        <div class="text-sm text-slate-400 mb-1">Nomor Antrian</div>
-                        <div class="text-3xl font-bold text-slate-200">#${String(q.noUrut).padStart(3, '0')}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-yellow-500 font-medium">Menunggu</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="text-sm text-slate-400 uppercase tracking-wider font-semibold">Antrian #${String(q.noUrut).padStart(3, '0')}</div>
+                            <div class="text-yellow-500 font-medium text-xs bg-yellow-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Menunggu</div>
+                        </div>
+                        <div class="text-xl font-bold text-slate-200 truncate capitalize" title="${q.namaMurid}">${q.namaMurid}</div>
                     </div>
                 `;
                 waitingListEl.appendChild(item);

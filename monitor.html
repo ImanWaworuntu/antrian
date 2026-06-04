@@ -55,17 +55,17 @@
         <!-- Current Serving (Left Side) -->
         <div class="w-2/3 flex flex-col gap-4 overflow-hidden">
             <!-- Main Call Display -->
-            <div class="glass-panel rounded-3xl flex-[2] flex flex-col items-center justify-center p-4 shadow-2xl relative overflow-hidden">
+            <div class="glass-panel rounded-3xl flex-[2] flex flex-col items-center justify-center p-6 shadow-2xl relative overflow-hidden gap-1 text-center">
                 <div class="absolute -top-32 -left-32 w-96 h-96 bg-orange-500 rounded-full opacity-20 blur-3xl"></div>
                 <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-500 rounded-full opacity-20 blur-3xl"></div>
                 
-                <h2 class="text-xl md:text-2xl font-semibold text-slate-300 uppercase tracking-widest mb-1 relative z-10">Panggilan Antrian</h2>
+                <h2 class="text-xl md:text-2xl font-semibold text-slate-300 uppercase tracking-widest relative z-10 mb-1">Panggilan Antrian</h2>
                 
-                <div id="current-serving-number" class="text-[7rem] md:text-[8rem] leading-none font-black text-white drop-shadow-[0_0_25px_rgba(251,146,60,0.5)] relative z-10 mb-2 transition-all duration-500 scale-100">---</div>
+                <div id="current-serving-number" class="text-[5rem] md:text-[6rem] leading-none font-black text-white drop-shadow-[0_0_25px_rgba(251,146,60,0.5)] relative z-10 transition-all duration-500 scale-100">---</div>
                 
-                <div id="current-serving-computer" class="text-2xl md:text-3xl font-bold text-yellow-400 tracking-wider relative z-10 mb-2 drop-shadow-md opacity-0 transition-opacity duration-500">Ke Komputer -</div>
-                
-                <div id="current-serving-name" class="text-lg md:text-xl text-orange-400 font-medium relative z-10 text-center">-</div>
+                <div id="current-serving-name" class="text-3xl md:text-4xl text-orange-400 font-bold relative z-10 truncate max-w-full px-4 capitalize">-</div>
+
+                <div id="current-serving-computer" class="text-4xl md:text-5xl font-black text-yellow-400 tracking-wider relative z-10 drop-shadow-md opacity-0 transition-opacity duration-500 mt-2">Ke Komputer -</div>
             </div>
 
             <!-- 7 Counters Status Grid -->

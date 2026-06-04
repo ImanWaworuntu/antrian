@@ -155,6 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.removeItem('adminAuth');
         sessionStorage.removeItem('adminUser');
         updateIstirahatUI('aktif'); // Reset state UI
+        
+        // Reset Date
+        selectedDate = getTodayDateString();
+        if (historyDateInput) historyDateInput.value = selectedDate;
+        if (currentDateDisplay) currentDateDisplay.textContent = `Tanggal: ${getDisplayDateString()}`;
+
         checkAuth();
     });
 
