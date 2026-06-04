@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const waitingCountEl = document.getElementById('waiting-count');
     const audioOverlay = document.getElementById('audio-unlock-overlay');
     window.speechUtterances = []; // To prevent garbage collection bug in some browsers
+    window.prevCallTimestamps = {}; // Tracks lastCalledAt for each queue id
 
     // Initialize Voices
     if ('speechSynthesis' in window) {
@@ -94,8 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const countersContainerEl = document.getElementById('counters-container');
 
     // State for animations and latest call
-    let prevCallId = null;
-    let prevCallTimestamp = null;
     let latestCalledQueue = null;
     let isInitialLoad = true;
     
@@ -135,9 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("Suara Bahasa Indonesia tidak ditemukan, menggunakan suara default.");
         }
         
+        utterance.onend = () => {
+            window.speechUtterances = window.speechUtterances.filter(u => u !== utterance);
+        };
+        
         window.speechUtterances.push(utterance);
-        if (window.speechUtterances.length > 5) window.speechUtterances.shift();
-
         window.speechSynthesis.speak(utterance);
     };
 
@@ -224,13 +225,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     let isJustCalled = false;
                     const isLatestGlobal = latestCalledQueue && latestCalledQueue.id === callId;
 
-                    if (isLatestGlobal && (prevCallId !== callId || prevCallTimestamp !== callTimestamp)) {
+                    if (window.prevCallTimestamps[callId] !== callTimestamp) {
                         isJustCalled = true;
                         
                         // Play Voice Announcement
                         if (!isInitialLoad) { 
                             speakQueue(numStr, counter.name);
                         }
+                        
+                        window.prevCallTimestamps[callId] = callTimestamp;
                     }
                     
                     const baseClass = "rounded-2xl p-4 flex flex-col justify-between items-center transition-all duration-500 h-full w-full relative overflow-hidden";
@@ -276,15 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
             countersContainerEl.appendChild(row2Wrapper);
         }
 
-        // Update Global State for animations
-        if (latestCalledQueue) {
-            prevCallId = latestCalledQueue.id;
-            prevCallTimestamp = latestCalledQueue.lastCalledAt || 0;
-            isInitialLoad = false;
-        } else {
-            prevCallId = null;
-            prevCallTimestamp = null;
-        }
+        // Set initial load to false after the first successful render
+        isInitialLoad = false;
 
         // Waiting List (Next 5)
         const waiting = queues.filter(q => q.status === 'Menunggu');
