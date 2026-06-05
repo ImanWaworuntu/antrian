@@ -547,10 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const daysCheckboxes = document.querySelectorAll('input[name="days"]:checked');
             const operatingDays = Array.from(daysCheckboxes).map(cb => cb.value);
 
-            if (operatingDays.length === 0) {
-                alert("Pilih minimal satu hari operasional.");
-                return;
-            }
+            // Allow empty operatingDays for showing WA group link
 
             const newSchedule = { openTime, closeTime, operatingDays };
 
