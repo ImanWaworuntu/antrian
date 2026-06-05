@@ -88,9 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update closed message text dynamically
             const closedTextEl = closedMessage.querySelector('p');
             if (closedTextEl) {
-                const daysMap = { 'Mon': 'Senin', 'Tue': 'Selasa', 'Wed': 'Rabu', 'Thu': 'Kamis', 'Fri': 'Jumat', 'Sat': 'Sabtu', 'Sun': 'Minggu' };
-                const daysTranslated = systemSchedule.operatingDays.map(d => daysMap[d]).join(', ');
-                closedTextEl.innerHTML = `Pendaftaran Antrian Ditutup.<br>Buka Kembali Hari: ${daysTranslated || 'Belum diatur'}, Jam ${systemSchedule.openTime} - ${systemSchedule.closeTime} WITA.`;
+                if (!systemSchedule.operatingDays || systemSchedule.operatingDays.length === 0) {
+                    closedTextEl.innerHTML = `Pendaftaran Antrian Ditutup.<br><br>Informasi selanjutnya di Grup WhatsApp SOSIALISASI SPMB 2026 SMAN 7 Makassar.<br><a href="https://chat.whatsapp.com/GnPynLzJHfbIoYaOVKrsY4" target="_blank" class="text-indigo-600 hover:text-indigo-800 underline font-medium">Link Grup: https://chat.whatsapp.com/GnPynLzJHfbIoYaOVKrsY4</a>`;
+                } else {
+                    const daysMap = { 'Mon': 'Senin', 'Tue': 'Selasa', 'Wed': 'Rabu', 'Thu': 'Kamis', 'Fri': 'Jumat', 'Sat': 'Sabtu', 'Sun': 'Minggu' };
+                    const daysTranslated = systemSchedule.operatingDays.map(d => daysMap[d]).join(', ');
+                    closedTextEl.innerHTML = `Pendaftaran Antrian Ditutup.<br>Buka Kembali Hari: ${daysTranslated}, Jam ${systemSchedule.openTime} - ${systemSchedule.closeTime} WITA.`;
+                }
             }
         }
     };
