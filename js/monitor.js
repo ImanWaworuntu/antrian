@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         queues.sort((a, b) => a.noUrut - b.noUrut);
 
         // Find Current Serving
-        const serving = queues.filter(q => q.status === 'Sedang diverifikasi');
+        const serving = queues.filter(q => q.status === 'Sedang diverifikasi' || q.status === 'Dipanggil');
         
         // Define Counters (Komputer 1 - 7 mapping to admin1 - admin7)
         const countersData = [

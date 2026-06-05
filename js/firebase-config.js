@@ -90,11 +90,24 @@ const mockDB = {
         return new Promise((resolve) => {
             const today = mockDB.getTodayKey();
             const queues = JSON.parse(localStorage.getItem(`queues_${today}`) || '[]');
+            
+            if (newStatus === 'Dipanggil' || newStatus === 'Sedang diverifikasi') {
+                queues.forEach(q => {
+                    if (q.status === 'Dipanggil' && q.melayaniOleh === currentUser && q.id !== id) {
+                        q.status = 'Menunggu';
+                        q.melayaniOleh = null;
+                    }
+                });
+            }
+
             const index = queues.findIndex(q => q.id === id);
             if (index > -1) {
                 queues[index].status = newStatus;
-                if (newStatus === 'Sedang diverifikasi') {
+                if (newStatus === 'Dipanggil' || newStatus === 'Sedang diverifikasi') {
                     queues[index].melayaniOleh = currentUser || 'superadmin';
+                    if (newStatus === 'Dipanggil') {
+                        queues[index].lastCalledAt = Date.now();
+                    }
                 }
                 localStorage.setItem(`queues_${today}`, JSON.stringify(queues));
             }

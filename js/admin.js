@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         queues.sort((a, b) => a.noUrut - b.noUrut).forEach((q) => {
             if (q.status === 'Menunggu') menunggu++;
             if (q.status === 'Selesai') selesai++;
-            if (q.status === 'Sedang diverifikasi') melayaniList.push(q.noUrut);
+            if (q.status === 'Sedang diverifikasi' || q.status === 'Dipanggil') melayaniList.push(q.noUrut);
 
             let statusBadge = '';
             if (q.status === 'Menunggu') {
@@ -308,6 +308,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusBadge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Selesai</span>`;
             } else if (q.status === 'Sedang diverifikasi') {
                 statusBadge = `<span class="px-2 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">Sedang diverifikasi</span>`;
+            } else if (q.status === 'Dipanggil') {
+                statusBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-medium">Dipanggil</span>`;
             } else {
                 statusBadge = `<span class="px-2 py-1 bg-orange-800 text-white rounded-full text-xs font-medium">Tunda</span>`;
             }
@@ -315,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let adminCell = `<span class="text-gray-400">-</span>`;
             let disableActions = false;
 
-            if (q.melayaniOleh) {
+            if (q.melayaniOleh && q.status !== 'Menunggu' && q.status !== 'Dipanggil') {
                 if (q.status === 'Sedang diverifikasi') {
                     if (q.melayaniOleh === currentUser) {
                         adminCell = `<span class="text-orange-600 font-semibold text-xs capitalize">Anda Sedang Memverifikasi</span>`;
@@ -349,10 +351,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4">${adminCell}</td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex justify-end gap-2 flex-wrap">
-                        ${(selectedDate === getTodayDateString()) && (q.status === 'Menunggu' || q.status === 'Sedang diverifikasi' || q.status === 'Tunda') ? `
+                        ${(selectedDate === getTodayDateString()) && (q.status === 'Menunggu' || q.status === 'Dipanggil' || q.status === 'Sedang diverifikasi' || q.status === 'Tunda') ? `
                             ${disableActions ? `<span class="text-xs text-orange-400 font-medium italic mt-1">Diverifikasi ${q.melayaniOleh}</span>` : `
-                                ${q.status !== 'Sedang diverifikasi' ? `<button onclick="updateQueueStatus('${q.id}', 'Sedang diverifikasi', true)" class="px-3 py-1 bg-orange-400 hover:bg-orange-500 text-white rounded text-xs font-medium transition-colors shadow-sm">Verifikasi</button>` : ''}
-                                ${q.status === 'Sedang diverifikasi' ? `<button onclick="updateQueueStatus('${q.id}', 'Sedang diverifikasi', true)" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors shadow-sm">Panggil Ulang</button>` : ''}
+                                ${q.status === 'Menunggu' || q.status === 'Dipanggil' || q.status === 'Tunda' ? `<button onclick="updateQueueStatus('${q.id}', 'Dipanggil', true)" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors shadow-sm">Panggil</button>` : ''}
+                                ${q.status === 'Menunggu' || q.status === 'Dipanggil' || q.status === 'Tunda' ? `<button onclick="updateQueueStatus('${q.id}', 'Sedang diverifikasi', true)" class="px-3 py-1 bg-orange-400 hover:bg-orange-500 text-white rounded text-xs font-medium transition-colors shadow-sm">Verifikasi</button>` : ''}
                                 ${q.status !== 'Selesai' ? `<button onclick="updateQueueStatus('${q.id}', 'Selesai')" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-medium transition-colors shadow-sm">Selesai</button>` : ''}
                                 ${q.status !== 'Tunda' ? `<button onclick="updateQueueStatus('${q.id}', 'Tunda')" class="px-3 py-1 bg-orange-700 hover:bg-orange-800 text-white rounded text-xs font-medium transition-colors shadow-sm">Tunda</button>` : ''}
                             `}
@@ -615,10 +617,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadData();
             } else {
                 const dateKey = getTodayDateString();
+                
+                // Revert previous 'Dipanggil' queues by this admin to 'Menunggu'
+                if (newStatus === 'Dipanggil' || newStatus === 'Sedang diverifikasi') {
+                    const snap = await database.ref(`queues/${dateKey}`).once('value');
+                    const allQ = snap.val();
+                    if (allQ) {
+                        const batchUpdates = {};
+                        Object.keys(allQ).forEach(qId => {
+                            const q = allQ[qId];
+                            if (q.status === 'Dipanggil' && q.melayaniOleh === currentUser && qId !== id) {
+                                batchUpdates[`${qId}/status`] = 'Menunggu';
+                                batchUpdates[`${qId}/melayaniOleh`] = null;
+                            }
+                        });
+                        if (Object.keys(batchUpdates).length > 0) {
+                            await database.ref(`queues/${dateKey}`).update(batchUpdates);
+                        }
+                    }
+                }
+
                 let updates = { status: newStatus };
-                if (newStatus === 'Sedang diverifikasi') {
+                if (newStatus === 'Dipanggil' || newStatus === 'Sedang diverifikasi') {
                     updates.melayaniOleh = currentUser || 'superadmin';
-                    updates.lastCalledAt = Date.now(); // Tambahkan timestamp panggilan
+                    if (newStatus === 'Dipanggil') {
+                        updates.lastCalledAt = Date.now(); // Tambahkan timestamp panggilan
+                    }
                 }
                 await database.ref(`queues/${dateKey}/${id}`).update(updates);
                 // No need to call renderTable, Firebase Real-time listener will trigger
@@ -645,6 +669,22 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const dateKey = selectedDate;
                 await database.ref(`queues/${dateKey}/${id}`).remove();
+                
+                // Fix: Sync counter to maximum remaining noUrut to prevent jumping numbers
+                const snap = await database.ref(`queues/${dateKey}`).once('value');
+                if (!snap.exists()) {
+                    await database.ref(`counters/${dateKey}`).remove();
+                } else {
+                    let maxNoUrut = 0;
+                    snap.forEach(child => {
+                        const q = child.val();
+                        if (q && q.noUrut > maxNoUrut) {
+                            maxNoUrut = q.noUrut;
+                        }
+                    });
+                    await database.ref(`counters/${dateKey}`).set(maxNoUrut);
+                }
+                
                 alert("Antrian berhasil dihapus.");
             }
         } catch (error) {
