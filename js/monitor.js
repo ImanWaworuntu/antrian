@@ -240,11 +240,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isLatestGlobal = latestCalledQueue && latestCalledQueue.id === callId;
 
                     if (window.prevCallTimestamps[callId] !== callTimestamp) {
-                        isJustCalled = true;
-                        
-                        // Play Voice Announcement
-                        if (!isInitialLoad) { 
-                            speakQueue(numStr, counter.name);
+                        if (counter.queue.status === 'Dipanggil') {
+                            isJustCalled = true;
+                            
+                            // Play Voice Announcement
+                            if (!isInitialLoad) { 
+                                speakQueue(numStr, counter.name);
+                            }
                         }
                         
                         window.prevCallTimestamps[callId] = callTimestamp;
