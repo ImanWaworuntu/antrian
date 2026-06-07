@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Live Clock
     const updateClock = () => {
-        const now = new Date();
+        const now = new Date(Date.now() + (window.serverTimeOffset || 0));
         
         // Time
         clockTime.textContent = now.toLocaleTimeString('id-ID', {
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper: Get Today's Date String
     const getTodayDateString = () => {
-        const now = new Date();
+        const now = new Date(Date.now() + (window.serverTimeOffset || 0));
         const formatter = new Intl.DateTimeFormat('id-ID', {
             timeZone: 'Asia/Makassar',
             year: 'numeric',
@@ -343,31 +343,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 triggerRender();
             });
         } else {
-            const dateKey = getTodayDateString();
-            
             // Listen to Counters State
             database.ref('counters_state').on('value', (snapshot) => {
                 countersState = snapshot.val() || {};
                 triggerRender();
             });
 
-            // Listen to Queues
-            database.ref(`queues/${dateKey}`).on('value', (snapshot) => {
-                const data = snapshot.val();
-                const queuesArray = [];
-                if (data) {
-                    Object.keys(data).forEach(key => {
-                        queuesArray.push({
-                            id: key,
-                            ...data[key]
-                        });
+            let currentDateKey = null;
+            let queuesRef = null;
+
+            const checkDateKey = () => {
+                const dateKey = getTodayDateString();
+                if (currentDateKey !== dateKey) {
+                    if (queuesRef) {
+                        queuesRef.off();
+                    }
+                    currentDateKey = dateKey;
+                    queuesRef = database.ref(`queues/${dateKey}`);
+                    queuesRef.on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        const queuesArray = [];
+                        if (data) {
+                            Object.keys(data).forEach(key => {
+                                queuesArray.push({
+                                    id: key,
+                                    ...data[key]
+                                });
+                            });
+                        }
+                        globalQueues = queuesArray;
+                        triggerRender();
+                    }, (error) => {
+                        console.error("Firebase Read Error:", error);
                     });
                 }
-                globalQueues = queuesArray;
-                triggerRender();
-            }, (error) => {
-                console.error("Firebase Read Error:", error);
-            });
+            };
+
+            checkDateKey();
+            window.addEventListener('serverTimeOffsetChanged', checkDateKey);
+            setInterval(checkDateKey, 60000);
         }
     };
 

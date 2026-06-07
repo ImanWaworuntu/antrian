@@ -37,6 +37,13 @@ try {
                 // Note: We don't necessarily switch to mock here because Firebase handles reconnections
             }
         });
+
+        // Listen to server time offset to correct local device clock issues
+        window.serverTimeOffset = 0;
+        database.ref('.info/serverTimeOffset').on('value', (snap) => {
+            window.serverTimeOffset = snap.val() || 0;
+            window.dispatchEvent(new Event('serverTimeOffsetChanged'));
+        });
     } else {
         throw new Error("Firebase SDK tidak ditemukan");
     }
@@ -48,7 +55,7 @@ try {
 // Fungsi pembantu untuk Mocking jika diperlukan
 const mockDB = {
     getTodayKey: () => {
-        const now = new Date();
+        const now = new Date(Date.now() + (window.serverTimeOffset || 0));
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     },
     saveQueue: (data) => {

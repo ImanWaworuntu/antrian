@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper: Get Today's Date String (YYYY-MM-DD in WITA)
     const getTodayDateString = () => {
-        const now = new Date();
+        const now = new Date(Date.now() + (window.serverTimeOffset || 0));
         const formatter = new Intl.DateTimeFormat('id-ID', {
             timeZone: 'Asia/Makassar',
             year: 'numeric',
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const getDisplayDateString = () => {
-        const now = new Date();
+        const now = new Date(Date.now() + (window.serverTimeOffset || 0));
         const formatter = new Intl.DateTimeFormat('id-ID', {
             timeZone: 'Asia/Makassar',
             year: 'numeric',
@@ -257,6 +257,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let selectedDate = getTodayDateString();
+
+    window.addEventListener('serverTimeOffsetChanged', () => {
+        // Automatically correct the selected date if the user was looking at the default load date
+        selectedDate = getTodayDateString();
+        if (historyDateInput) historyDateInput.value = selectedDate;
+        currentDateDisplay.textContent = `Tanggal: ${getDisplayDateString()}`;
+        if (isAuthenticated) loadData();
+    }, { once: true });
 
     if (historyDateInput) {
         historyDateInput.value = selectedDate;
@@ -638,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (newStatus === 'Dipanggil' || newStatus === 'Sedang diverifikasi') {
                     updates.melayaniOleh = currentUser || 'superadmin';
                     if (newStatus === 'Dipanggil') {
-                        updates.lastCalledAt = Date.now(); // Tambahkan timestamp panggilan
+                        updates.lastCalledAt = Date.now() + (window.serverTimeOffset || 0); // Tambahkan timestamp panggilan
                     }
                 }
                 await database.ref(`queues/${dateKey}/${id}`).update(updates);

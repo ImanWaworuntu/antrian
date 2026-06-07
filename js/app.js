@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Format date string for Firebase keys (YYYY-MM-DD)
     const getTodayDateString = () => {
-        const now = new Date();
+        const now = new Date(Date.now() + (window.serverTimeOffset || 0));
         const formatter = new Intl.DateTimeFormat('id-ID', {
             timeZone: 'Asia/Makassar',
             year: 'numeric',
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (systemStatus === 'open') return true;
         if (systemStatus === 'closed') return false;
 
-        const now = new Date();
+        const now = new Date(Date.now() + (window.serverTimeOffset || 0));
         
         // Get day in WITA (Asia/Makassar)
         const dayStr = now.toLocaleDateString('en-US', {
@@ -138,11 +138,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             updateViewBasedOnStatus();
         });
-        const dateKey = getTodayDateString();
-        database.ref(`counters/${dateKey}`).on('value', (snapshot) => {
-            currentQueueCount = snapshot.val() || 0;
-            updateViewBasedOnStatus();
-        });
+        
+        let currentCounterDateKey = null;
+        let counterRefListener = null;
+
+        const checkDateKey = () => {
+            const dateKey = getTodayDateString();
+            if (currentCounterDateKey !== dateKey) {
+                if (counterRefListener) {
+                    counterRefListener.off();
+                }
+                currentCounterDateKey = dateKey;
+                counterRefListener = database.ref(`counters/${dateKey}`);
+                counterRefListener.on('value', (snapshot) => {
+                    currentQueueCount = snapshot.val() || 0;
+                    updateViewBasedOnStatus();
+                });
+            }
+        };
+
+        checkDateKey();
+        window.addEventListener('serverTimeOffsetChanged', checkDateKey);
+        setInterval(checkDateKey, 60000);
     }
 
     // Auto-update UI every minute to handle time-based open/close seamlessly
@@ -182,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             namaOrtu,
             namaMurid,
             noTelp,
-            timestamp: Date.now() // UTC timestamp, will be formatted on display
+            timestamp: Date.now() + (window.serverTimeOffset || 0) // UTC timestamp, will be formatted on display
         };
 
         try {
