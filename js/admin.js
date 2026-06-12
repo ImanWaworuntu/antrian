@@ -643,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 let updates = { status: newStatus };
-                if (newStatus === 'Dipanggil' || newStatus === 'Sedang diverifikasi') {
+                if (newStatus === 'Dipanggil' || newStatus === 'Sedang diverifikasi' || newStatus === 'Selesai') {
                     updates.melayaniOleh = currentUser || 'superadmin';
                     if (newStatus === 'Dipanggil') {
                         updates.lastCalledAt = Date.now() + (window.serverTimeOffset || 0); // Tambahkan timestamp panggilan
