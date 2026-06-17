@@ -343,7 +343,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const tr = document.createElement('tr');
-            tr.className = "hover:bg-gray-50 transition-colors";
+            let rowClass = "transition-colors";
+            if (q.status === 'Sedang diverifikasi') {
+                rowClass += " bg-green-50 hover:bg-green-100";
+            } else if (q.status === 'Dipanggil') {
+                rowClass += " bg-blue-50 hover:bg-blue-100";
+            } else {
+                rowClass += " hover:bg-gray-50";
+            }
+            tr.className = rowClass;
             
             const safeNamaMurid = escapeHTML(q.namaMurid);
             const safeNamaOrtu = escapeHTML(q.namaOrtu);
