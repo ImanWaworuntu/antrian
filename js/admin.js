@@ -345,9 +345,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             let rowClass = "transition-colors";
             if (q.status === 'Sedang diverifikasi' && (q.melayaniOleh === currentUser || currentUser === 'superadmin')) {
-                rowClass += " bg-green-200 hover:bg-green-300";
+                rowClass += " bg-green-300 hover:bg-green-400";
             } else if (q.status === 'Dipanggil' && (q.melayaniOleh === currentUser || currentUser === 'superadmin')) {
-                rowClass += " bg-blue-200 hover:bg-blue-300";
+                rowClass += " bg-blue-300 hover:bg-blue-400";
             } else {
                 rowClass += " hover:bg-gray-50";
             }
