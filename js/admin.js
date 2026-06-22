@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let loginSuccess = false;
 
             // Hashed superadmin password
-            const superHash = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918';
+            const superHash = '8af3cc98a5706fc35fa0a2c798a5387e213042a8933b090410d51898204f4070';
             // Hashed normal admin password
             const adminHash = '3298546f96358cdf37080f96c18eddc75a74d5f5361c95812dcd37650610c2eb';
 
