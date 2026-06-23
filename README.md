@@ -1,4 +1,4 @@
-# Sistem Antrian Online - SMA Negeri 7 Makassar
+# Sistem Antrian SPMB - SMA Negeri 7 Makassar
 
 Aplikasi web untuk sistem pengambilan nomor antrian secara online, dirancang khusus untuk mempermudah proses pendaftaran calon peserta didik baru di SMA Negeri 7 Makassar.
 
@@ -55,10 +55,5 @@ Cara melakukan deployment pembaruan:
    ```bash
    firebase deploy
    ```
-
-## 👨‍💻 Kontribusi
-
-Silakan buat *Pull Request* atau *Issue* apabila Anda ingin memperbaiki bug atau menambahkan fitur baru pada proyek ini.
-
 ---
 **© Sistem Antrian By Pandu Digital SMANET**
