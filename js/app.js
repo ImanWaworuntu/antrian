@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submit-btn');
     const btnText = document.getElementById('btn-text');
     const btnSpinner = document.getElementById('btn-spinner');
+    const queueSubtitle = document.getElementById('queue-subtitle');
 
     // Display elements
     const displayNum = document.getElementById('display-number');
@@ -75,15 +76,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 queueForm.classList.add('hidden');
                 closedMessage.classList.add('hidden');
                 fullMessage.classList.remove('hidden');
+                if (queueSubtitle) queueSubtitle.textContent = `Kuota Antrian: 0`;
             } else {
                 queueForm.classList.remove('hidden');
                 closedMessage.classList.add('hidden');
                 fullMessage.classList.add('hidden');
+                const remainingQuota = maxQueueLimit !== null ? maxQueueLimit - currentQueueCount : 'Tidak Terbatas';
+                if (queueSubtitle) queueSubtitle.textContent = `Kuota Antrian: ${remainingQuota}`;
             }
         } else {
             queueForm.classList.add('hidden');
             closedMessage.classList.remove('hidden');
             fullMessage.classList.add('hidden');
+            if (queueSubtitle) queueSubtitle.textContent = 'Ambil nomor antrian Anda dengan mudah';
             
             // Update closed message text dynamically
             const closedTextEl = closedMessage.querySelector('p');
