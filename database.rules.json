@@ -3,24 +3,30 @@
     "queues": {
       ".read": true,
       "$date": {
-        ".write": true
+        ".write": "newData.exists()",
+        "$queue_id": {
+          ".write": "newData.exists()",
+          ".validate": "(!data.exists() && newData.hasChildren(['namaMurid', 'namaOrtu', 'noTelp'])) || (data.exists() && newData.hasChild('status'))"
+        }
       }
     },
     "counters": {
       ".read": true,
-      ".write": true
+      "$date": {
+        ".write": "newData.exists() && newData.isNumber()"
+      }
     },
     "counters_state": {
       ".read": true,
-      ".write": true
+      ".write": "newData.exists()"
     },
     "settings": {
       ".read": true,
-      ".write": true
+      ".write": "newData.exists()"
     },
     "system_status": {
       ".read": true,
-      ".write": true
+      ".write": "newData.exists() && newData.isString()"
     }
   }
 }
