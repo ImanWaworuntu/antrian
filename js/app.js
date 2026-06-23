@@ -76,19 +76,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 queueForm.classList.add('hidden');
                 closedMessage.classList.add('hidden');
                 fullMessage.classList.remove('hidden');
-                if (queueSubtitle) queueSubtitle.textContent = `Kuota Antrian: 0`;
+                if (queueSubtitle) {
+                    queueSubtitle.className = "mt-2 relative z-10";
+                    queueSubtitle.innerHTML = `<span class="inline-block px-3 py-1 rounded-full text-sm font-bold bg-red-500 text-white animate-pulse shadow-md border border-red-400">Kuota Antrian: 0</span>`;
+                }
             } else {
                 queueForm.classList.remove('hidden');
                 closedMessage.classList.add('hidden');
                 fullMessage.classList.add('hidden');
                 const remainingQuota = maxQueueLimit !== null ? maxQueueLimit - currentQueueCount : 'Tidak Terbatas';
-                if (queueSubtitle) queueSubtitle.textContent = `Kuota Antrian: ${remainingQuota}`;
+                if (queueSubtitle) {
+                    queueSubtitle.className = "mt-2 relative z-10";
+                    queueSubtitle.innerHTML = `<span class="inline-block px-3 py-1 rounded-full text-sm font-bold bg-red-500 text-white animate-pulse shadow-md border border-red-400">Kuota Antrian: ${remainingQuota}</span>`;
+                }
             }
         } else {
             queueForm.classList.add('hidden');
             closedMessage.classList.remove('hidden');
             fullMessage.classList.add('hidden');
-            if (queueSubtitle) queueSubtitle.textContent = 'Ambil nomor antrian Anda dengan mudah';
+            if (queueSubtitle) {
+                queueSubtitle.className = "text-indigo-100 text-sm mt-1 relative z-10";
+                queueSubtitle.textContent = 'Ambil nomor antrian Anda dengan mudah';
+            }
             
             // Update closed message text dynamically
             const closedTextEl = closedMessage.querySelector('p');
