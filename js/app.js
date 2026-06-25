@@ -72,6 +72,51 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!loadingState.classList.contains('hidden')) return;
         if (!successOutput.classList.contains('hidden')) return;
 
+        const cooldownMessage = document.getElementById('cooldown-message');
+        const lastQueueTime = localStorage.getItem('last_queue_time');
+        const COOLDOWN_MS = 5 * 60 * 1000;
+        
+        if (window.cooldownTimeout) clearTimeout(window.cooldownTimeout);
+        
+        if (lastQueueTime) {
+            const timeDiff = Date.now() - parseInt(lastQueueTime);
+            if (timeDiff < COOLDOWN_MS) {
+                queueForm.classList.add('hidden');
+                closedMessage.classList.add('hidden');
+                fullMessage.classList.add('hidden');
+                if (cooldownMessage) cooldownMessage.classList.remove('hidden');
+                if (queueSubtitle) {
+                    queueSubtitle.className = "mt-2 relative z-10";
+                    queueSubtitle.innerHTML = `<span class="inline-block px-3 py-1 rounded-full text-sm font-bold bg-blue-500 text-white shadow-md border border-blue-400">Harap Tunggu</span>`;
+                }
+                
+                const timerEl = document.getElementById('cooldown-timer');
+                if (timerEl) {
+                    const updateTimer = () => {
+                        const remaining = COOLDOWN_MS - (Date.now() - parseInt(localStorage.getItem('last_queue_time') || '0'));
+                        if (remaining <= 0) {
+                            localStorage.removeItem('last_queue_time');
+                            updateViewBasedOnStatus();
+                        } else {
+                            const m = Math.floor(remaining / 60000);
+                            const s = Math.floor((remaining % 60000) / 1000);
+                            timerEl.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+                            if (!successOutput.classList.contains('hidden')) return;
+                            window.cooldownTimeout = setTimeout(updateTimer, 1000);
+                        }
+                    };
+                    updateTimer();
+                }
+                return;
+            } else {
+                localStorage.removeItem('last_queue_time');
+                if (cooldownMessage) cooldownMessage.classList.add('hidden');
+            }
+        } else {
+            if (cooldownMessage) cooldownMessage.classList.add('hidden');
+        }
+
+
         if (!isConnected && (typeof useMock === 'undefined' || !useMock)) {
             queueForm.classList.add('hidden');
             closedMessage.classList.remove('hidden');
@@ -243,11 +288,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (maxQueueLimit !== null && currentQueueCount >= maxQueueLimit) {
                     throw new Error("Kuota penuh");
                 }
+                const mockDateKey = getTodayDateString();
+                const queuesMock = JSON.parse(localStorage.getItem(`queues_${mockDateKey}`) || '[]');
+                if (queuesMock.some(q => q.namaMurid.toLowerCase() === namaMurid.toLowerCase())) {
+                    throw new Error(`Nama "${namaMurid}" sudah terdaftar.`);
+                }
                 // Gunakan MockDB (LocalStorage)
                 resultData = await mockDB.saveQueue(queueData);
             } else {
                 // Gunakan Firebase Realtime Database
                 const dateKey = getTodayDateString();
+                
+                const snapshot = await database.ref(`queues/${dateKey}`).once('value');
+                const queues = snapshot.val();
+                if (queues) {
+                    const isDuplicate = Object.values(queues).some(q => 
+                        q.namaMurid.toLowerCase() === namaMurid.toLowerCase()
+                    );
+                    if (isDuplicate) {
+                        throw new Error(`Nama "${namaMurid}" sudah terdaftar.`);
+                    }
+                }
+
                 const counterRef = database.ref(`counters/${dateKey}`);
                 
                 let limitExceeded = false;
@@ -281,6 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error("Gagal mengambil nomor antrian.");
                 }
             }
+            // Set cooldown
+            localStorage.setItem('last_queue_time', Date.now().toString());
 
             // Show Success Output
             queueForm.classList.add('hidden');
@@ -304,6 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error.message === "Kuota penuh") {
                 alert('Mohon maaf, kuota antrian telah penuh.');
                 window.location.reload();
+            } else if (error.message.includes("sudah terdaftar")) {
+                alert(error.message);
             } else {
                 alert('Terjadi kesalahan saat memproses antrian. Silakan coba lagi.');
             }
