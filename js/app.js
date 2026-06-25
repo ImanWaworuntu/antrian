@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let systemStatus = 'auto'; // 'auto', 'open', 'closed'
+    let isConnected = typeof useMock !== 'undefined' ? useMock : true;
     let maxQueueLimit = 200; // Default 200
     let currentQueueCount = 0;
     let systemSchedule = {
@@ -70,6 +71,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Only update if not currently loading or in success screen
         if (!loadingState.classList.contains('hidden')) return;
         if (!successOutput.classList.contains('hidden')) return;
+
+        if (!isConnected && (typeof useMock === 'undefined' || !useMock)) {
+            queueForm.classList.add('hidden');
+            closedMessage.classList.remove('hidden');
+            fullMessage.classList.add('hidden');
+            if (queueSubtitle) {
+                queueSubtitle.className = "text-indigo-100 text-sm mt-1 relative z-10";
+                queueSubtitle.textContent = 'Menunggu jaringan...';
+            }
+            const closedTextEl = closedMessage.querySelector('p');
+            if (closedTextEl) closedTextEl.innerHTML = `Koneksi ke server terputus.<br>Menunggu jaringan stabil untuk melanjutkan pendaftaran...`;
+            return;
+        }
 
         if (checkOperatingHours()) {
             if (maxQueueLimit !== null && currentQueueCount >= maxQueueLimit) {
@@ -114,6 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Listen to system status and queue settings
+    window.addEventListener('firebaseConnectionState', (e) => {
+        isConnected = e.detail;
+        updateViewBasedOnStatus();
+    });
+
     if (useMock) {
         mockDB.getSystemStatus((status) => {
             systemStatus = status;
@@ -209,11 +228,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btnText.textContent = 'Memproses...';
         btnSpinner.classList.remove('hidden');
 
+        const clientDisplayTime = Date.now() + (window.serverTimeOffset || 0);
         const queueData = {
             namaOrtu,
             namaMurid,
             noTelp,
-            timestamp: Date.now() + (window.serverTimeOffset || 0) // UTC timestamp, will be formatted on display
+            timestamp: typeof useMock !== 'undefined' && useMock ? clientDisplayTime : firebase.database.ServerValue.TIMESTAMP
         };
 
         try {
@@ -271,7 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
             displayNamaMurid.textContent = `Calon Murid: ${resultData.namaMurid}`;
             
             // Format Time in WITA
-            const timeStr = new Date(resultData.timestamp).toLocaleString('id-ID', {
+            const displayTimestamp = (typeof useMock !== 'undefined' && useMock) ? resultData.timestamp : clientDisplayTime;
+            const timeStr = new Date(displayTimestamp).toLocaleString('id-ID', {
                 timeZone: 'Asia/Makassar',
                 dateStyle: 'medium',
                 timeStyle: 'short'

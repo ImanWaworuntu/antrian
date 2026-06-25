@@ -29,13 +29,15 @@ try {
         
         // Test connection
         database.ref('.info/connected').on('value', (snap) => {
-            if (snap.val() === true) {
+            const connected = snap.val() === true;
+            if (connected) {
                 console.log("Terhubung ke Firebase Realtime Database.");
                 useMock = false;
             } else {
                 console.warn("Terputus dari Firebase. Menunggu koneksi...");
                 // Note: We don't necessarily switch to mock here because Firebase handles reconnections
             }
+            window.dispatchEvent(new CustomEvent('firebaseConnectionState', { detail: connected }));
         });
 
         // Listen to server time offset to correct local device clock issues

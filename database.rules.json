@@ -3,17 +3,16 @@
     "queues": {
       ".read": true,
       "$date": {
-        ".write": "newData.exists()",
         "$queue_id": {
           ".write": "newData.exists()",
-          ".validate": "(!data.exists() && newData.hasChildren(['namaMurid', 'namaOrtu', 'noTelp'])) || (data.exists() && newData.hasChild('status'))"
+          ".validate": "(data.exists() && newData.hasChild('status')) || (!data.exists() && newData.hasChildren(['namaMurid', 'namaOrtu', 'noTelp', 'timestamp']) && (root.child('system_status').val() === 'open' || (root.child('system_status').val() === 'auto' && ((now + 28800000) % 86400000 >= 28800000) && ((now + 28800000) % 86400000 <= 43200000))) && (newData.child('timestamp').val() <= now + 60000 && newData.child('timestamp').val() >= now - 60000))"
         }
       }
     },
     "counters": {
       ".read": true,
       "$date": {
-        ".write": "newData.exists() && newData.isNumber()"
+        ".write": "newData.exists() && newData.isNumber() && (root.child('system_status').val() === 'open' || (root.child('system_status').val() === 'auto' && ((now + 28800000) % 86400000 >= 28800000) && ((now + 28800000) % 86400000 <= 43200000)))"
       }
     },
     "counters_state": {
