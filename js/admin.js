@@ -163,8 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Hashed normal admin password
             const adminHash = '3298546f96358cdf37080f96c18eddc75a74d5f5361c95812dcd37650610c2eb';
 
-            if (user === 'superadmin' && passHash === superHash) {
-                loginSuccess = true;
+            if (user === 'superadmin') {
+                if (typeof useMock !== 'undefined' && useMock) {
+                    if (passHash === superHash) loginSuccess = true;
+                } else {
+                    try {
+                        await firebase.auth().signInWithEmailAndPassword('superadmin@smanet.com', pass);
+                        loginSuccess = true;
+                    } catch (authError) {
+                        console.error("Firebase Auth failed:", authError);
+                        loginSuccess = false;
+                    }
+                }
             } else if (validAdmins.includes(user) && passHash === adminHash) {
                 loginSuccess = true;
             }
@@ -191,6 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Logout Logic
     logoutBtn.addEventListener('click', () => {
+        if (currentUser === 'superadmin' && typeof firebase !== 'undefined' && firebase.auth) {
+            firebase.auth().signOut().catch(console.error);
+        }
         isAuthenticated = false;
         currentUser = '';
         sessionStorage.removeItem('adminAuth');

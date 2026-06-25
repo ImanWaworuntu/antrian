@@ -21,11 +21,11 @@
     },
     "settings": {
       ".read": true,
-      ".write": "newData.exists()"
+      ".write": "auth != null && auth.uid === '4RSeCcQgc9XSo7a5apuJlTaC8TA2'"
     },
     "system_status": {
       ".read": true,
-      ".write": "newData.exists() && newData.isString()"
+      ".write": "auth != null && auth.uid === '4RSeCcQgc9XSo7a5apuJlTaC8TA2' && newData.isString()"
     }
   }
 }
